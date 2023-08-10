@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module ahbinterface #(
+module openhw_ahbinterface #(
   parameter XLEN,
   parameter LSU = 0                                   // 1: LSU bus width is `XLEN, 0: IFU bus width is 32 bits
 )( 
@@ -54,18 +54,18 @@ module ahbinterface #(
   logic                                 CaptureEn;
   localparam                            LEN = (LSU ? XLEN : 32);   // 32 bits for IFU, XLEN for LSU
   
-  flopen #(LEN) fb(.clk(HCLK), .en(CaptureEn), .d(HRDATA[LEN-1:0]), .q(FetchBuffer));
+  openhw_flopen #(LEN) fb(.clk(HCLK), .en(CaptureEn), .d(HRDATA[LEN-1:0]), .q(FetchBuffer));
 
   if(LSU) begin
     // delay HWDATA by 1 cycle per spec; assumes AHBW = XLEN    
-    flop #(XLEN)   wdreg(HCLK, WriteData, HWDATA); 
-    flop #(XLEN/8) HWSTRBReg(HCLK, ByteMask, HWSTRB);
+    openhw_flop #(XLEN)   wdreg(HCLK, WriteData, HWDATA); 
+    openhw_flop #(XLEN/8) HWSTRBReg(HCLK, ByteMask, HWSTRB);
   end else begin
     assign HWDATA = '0;
     assign HWSTRB = '0;
   end    
 
-  busfsm busfsm(.HCLK, .HRESETn, .Flush, .BusRW,
+  openhw_busfsm busfsm(.HCLK, .HRESETn, .Flush, .BusRW,
     .BusCommitted, .Stall, .BusStall, .CaptureEn, .HREADY,
     .HTRANS, .HWRITE);
 

@@ -28,7 +28,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 // This comparator is best
-module comparator #(parameter WIDTH=64) (
+module openhw_comparator #(parameter WIDTH=64) (
   input  logic [WIDTH-1:0] a, b,    // Operands
   input  logic             sgnd,    // Signed operands
   output logic [1:0]       flags);  // Output flags: {eq, lt}
@@ -43,5 +43,5 @@ module comparator #(parameter WIDTH=64) (
   // Behavioral description gives best results
   assign eq = (a == b);            // eq = 1 when operands are equal, 0 otherwise
   assign lt = (af < bf);           // lt = 1 when a less than b (taking signed operands into account)
-  assign flags = {eq, lt};
+  assign openhw_flags = {eq, lt};
 endmodule

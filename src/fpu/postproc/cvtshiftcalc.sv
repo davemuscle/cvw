@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module cvtshiftcalc import cvw::*;  #(parameter cvw_t P) (
+module openhw_cvtshiftcalc import cvw::*;  #(parameter cvw_t P) (
   input  logic                     XZero,              // is the input zero?
   input  logic                     ToInt,              // to integer conversion?
   input  logic                     IntToFp,            // interger to floating point conversion?

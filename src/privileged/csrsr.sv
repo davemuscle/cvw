@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module csrsr import cvw::*;  #(parameter cvw_t P) (
+module openhw_csrsr import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset, StallW,
   input  logic              WriteMSTATUSM, WriteMSTATUSHM, WriteSSTATUSM, 
   input  logic              TrapM, FRegWriteM,

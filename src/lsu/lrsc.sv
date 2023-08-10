@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module lrsc import cvw::*;  #(parameter cvw_t P) (
+module openhw_lrsc import cvw::*;  #(parameter cvw_t P) (
   input  logic                 clk, 
   input  logic                 reset,
   input  logic                 StallW,
@@ -60,6 +60,6 @@ module lrsc import cvw::*;  #(parameter cvw_t P) (
   end
   
   flopenr #(P.PA_BITS-2) resadrreg(clk, reset, lrM & ~StallW, PAdrM[P.PA_BITS-1:2], ReservationPAdrW); // could drop clear on this one but not valid
-  flopenr #(1) resvldreg(clk, reset, ~StallW, ReservationValidM, ReservationValidW);
-  flopenr #(1) squashreg(clk, reset, ~StallW, SquashSCM, SquashSCW);
+  openhw_flopenr #(1) resvldreg(clk, reset, ~StallW, ReservationValidM, ReservationValidW);
+  openhw_flopenr #(1) squashreg(clk, reset, ~StallW, SquashSCM, SquashSCW);
 endmodule

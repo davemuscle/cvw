@@ -29,7 +29,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module tlbmixer import cvw::*;  #(parameter cvw_t P) (
+module openhw_tlbmixer import cvw::*;  #(parameter cvw_t P) (
     input  logic [P.VPN_BITS-1:0]   VPN,
     input  logic [P.PPN_BITS-1:0]   PPN,
     input  logic [1:0]             HitPageType,
@@ -47,13 +47,13 @@ module tlbmixer import cvw::*;  #(parameter cvw_t P) (
   if (P.XLEN == 32)
     // kilopage: 22 bits of PPN, 0 bits of VPN
     // megapage: 12 bits of PPN, 10 bits of VPN
-    mux2 #(22) pnm(22'h000000, 22'h0003FF, HitPageType[0], PageNumberMask);
+    openhw_mux2 #(22) pnm(22'h000000, 22'h0003FF, HitPageType[0], PageNumberMask);
   else
     // kilopage: 44 bits of PPN, 0 bits of VPN
     // megapage: 35 bits of PPN, 9 bits of VPN
     // gigapage: 26 bits of PPN, 18 bits of VPN
     // terapage: 17 bits of PPN, 27 bits of VPN
-    mux4 #(44) pnm(44'h00000000000, 44'h000000001FF, 44'h0000003FFFF, 44'h00007FFFFFF, HitPageType, PageNumberMask);
+    openhw_mux4 #(44) pnm(44'h00000000000, 44'h000000001FF, 44'h0000003FFFF, 44'h00007FFFFFF, HitPageType, PageNumberMask);
  
   // merge low segments of VPN with high segments of PPN decided by the pagetype.
   assign ZeroExtendedVPN = {{EXTRA_BITS{1'b0}}, VPN}; // forces the VPN to be the same width as PPN.

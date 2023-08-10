@@ -28,7 +28,7 @@
 
 `define RAM_LATENCY 0
 
-module ram_ahb import cvw::*;  #(parameter cvw_t P, 
+module openhw_ram_ahb import cvw::*;  #(parameter cvw_t P, 
                                  parameter BASE=0, RANGE = 65535) (
   input  logic                 HCLK, HRESETn, 
   input  logic                 HSELRam,
@@ -58,20 +58,20 @@ module ram_ahb import cvw::*;  #(parameter cvw_t P,
   assign memwrite  = initTrans & HWRITE;  
   assign memread   = initTrans & ~HWRITE;
  
-  flopenr #(1) memwritereg(HCLK, ~HRESETn, HREADY, memwrite, memwriteD); 
-  flopenr #(P.PA_BITS)   haddrreg(HCLK, ~HRESETn, HREADY, HADDR, HADDRD);
+  openhw_flopenr #(1) memwritereg(HCLK, ~HRESETn, HREADY, memwrite, memwriteD); 
+  openhw_flopenr #(P.PA_BITS)   haddrreg(HCLK, ~HRESETn, HREADY, HADDR, HADDRD);
 
   // Stall on a read after a write because the RAM can't take both adddresses on the same cycle
   assign nextHREADYRam = (~(memwriteD & memread)) & ~DelayReady;
-  flopr #(1) readyreg(HCLK, ~HRESETn, nextHREADYRam, HREADYRam);
+  openhw_flopr #(1) readyreg(HCLK, ~HRESETn, nextHREADYRam, HREADYRam);
 
   assign HRESPRam = 0; // OK
 
   // On writes or during a wait state, use address delayed by one cycle to sync RamAddr with HWDATA or hold stalled address
-  mux2 #(P.PA_BITS) adrmux(HADDR, HADDRD, memwriteD | ~HREADY, RamAddr);
+  openhw_mux2 #(P.PA_BITS) adrmux(HADDR, HADDRD, memwriteD | ~HREADY, RamAddr);
 
   // single-ported RAM
-  ram1p1rwbe #(.P(P), .DEPTH(RANGE/8), .WIDTH(P.XLEN), .PRELOAD_ENABLED(P.FPGA)) memory(.clk(HCLK), .ce(1'b1), 
+  openhw_ram1p1rwbe #(.P(P), .DEPTH(RANGE/8), .WIDTH(P.XLEN), .PRELOAD_ENABLED(P.FPGA)) memory(.clk(HCLK), .ce(1'b1), 
     .addr(RamAddr[ADDR_WIDTH+OFFSET-1:OFFSET]), .we(memwriteD), .din(HWDATA), .bwe(HWSTRB), .dout(HREADRam));
   
   // use this to add arbitrary latency to ram. Helps test AHB controller correctness
@@ -80,7 +80,7 @@ module ram_ahb import cvw::*;  #(parameter cvw_t P,
     logic             CntEn, CntRst;
     logic             CycleFlag;
     
-    flopenr #(8) counter (HCLK, ~HRESETn | CntRst, CntEn, NextCycle, Cycle);
+    openhw_flopenr #(8) openhw_counter (HCLK, ~HRESETn | CntRst, CntEn, NextCycle, Cycle);
     assign NextCycle = Cycle + 1'b1;
 
     typedef enum      logic  {READY, DELAY} statetype;

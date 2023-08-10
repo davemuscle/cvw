@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module privmode import cvw::*;  #(parameter cvw_t P) (
+module openhw_privmode import cvw::*;  #(parameter cvw_t P) (
   input  logic             clk, reset,
   input  logic             StallW, 
   input  logic             TrapM,               // Trap 
@@ -49,7 +49,7 @@ module privmode import cvw::*;  #(parameter cvw_t P) (
       else                             NextPrivilegeModeM = PrivilegeModeW;
     end
 
-    flopenl #(2) privmodereg(clk, reset, ~StallW, NextPrivilegeModeM, P.M_MODE, PrivilegeModeW);
+    openhw_flopenl #(2) privmodereg(clk, reset, ~StallW, NextPrivilegeModeM, P.M_MODE, PrivilegeModeW);
   end else begin  // only machine mode supported
     assign NextPrivilegeModeM = P.M_MODE;
     assign PrivilegeModeW = P.M_MODE;

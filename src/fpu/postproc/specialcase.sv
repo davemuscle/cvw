@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module specialcase import cvw::*;  #(parameter cvw_t P) (
+module openhw_specialcase import cvw::*;  #(parameter cvw_t P) (
   input  logic                 Xs,                // X sign
   input  logic [P.NF:0]        Xm, Ym, Zm,        // input significand's
   input  logic                 XNaN, YNaN, ZNaN,  // are the inputs NaN

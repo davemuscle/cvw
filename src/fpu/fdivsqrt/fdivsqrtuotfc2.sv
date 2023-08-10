@@ -29,7 +29,7 @@
 ///////////////////////////////
 // Unified OTFC, Radix 2 //
 ///////////////////////////////
-module fdivsqrtuotfc2 import cvw::*;  #(parameter cvw_t P) (
+module openhw_fdivsqrtuotfc2 import cvw::*;  #(parameter cvw_t P) (
   input  logic             up, un,
   input  logic [P.DIVb+1:0] C,
   input  logic [P.DIVb:0]   U, UM,

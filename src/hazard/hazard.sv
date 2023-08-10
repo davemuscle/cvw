@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module hazard (
+module openhw_hazard (
   // Detect hazards
   input  logic  BPWrongE, CSRWriteFenceM, RetM, TrapM,   
   input  logic  LoadStallD, StoreStallD, MDUStallD, CSRRdStallD,

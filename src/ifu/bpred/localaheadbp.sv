@@ -25,7 +25,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module localaheadbp import cvw::*; #(parameter cvw_t P, 
+module openhw_localaheadbp import cvw::*; #(parameter cvw_t P, 
                                      parameter XLEN,
                       parameter m = 6, // 2^m = number of local history branches 
                       parameter k = 10) ( // number of past branches stored
@@ -59,7 +59,7 @@ module localaheadbp import cvw::*; #(parameter cvw_t P,
   //assign IndexNextF = LHR;
   assign IndexM = LHRW;
   
-  ram2p1r1wbe #(P, 2**k, 2) PHT(.clk(clk),
+  openhw_ram2p1r1wbe #(P, 2**k, 2) PHT(.clk(clk),
     .ce1(~StallD), .ce2(~StallW & ~FlushW),
     .ra1(LHRF),
     .rd1(BPDirPredD),
@@ -69,12 +69,12 @@ module localaheadbp import cvw::*; #(parameter cvw_t P,
     .bwe2(1'b1));
 
   //flopenrc #(2) PredictionRegD(clk, reset,  FlushD, ~StallD, BPDirPredF, BPDirPredD);
-  flopenrc #(2) PredictionRegE(clk, reset,  FlushE, ~StallE, BPDirPredD, BPDirPredE);
-  flopenrc #(2) PredictionRegM(clk, reset,  FlushM, ~StallM, BPDirPredE, BPDirPredM);
+  openhw_flopenrc #(2) PredictionRegE(clk, reset,  FlushE, ~StallE, BPDirPredD, BPDirPredE);
+  openhw_flopenrc #(2) PredictionRegM(clk, reset,  FlushM, ~StallM, BPDirPredE, BPDirPredM);
 
-  satCounter2 BPDirUpdateE(.BrDir(PCSrcE), .OldState(BPDirPredM), .NewState(NewBPDirPredM));
+  openhw_satCounter2 BPDirUpdateE(.BrDir(PCSrcE), .OldState(BPDirPredM), .NewState(NewBPDirPredM));
   //flopenrc #(2) NewPredictionRegM(clk, reset,  FlushM, ~StallM, NewBPDirPredE, NewBPDirPredM);
-  flopenrc #(2) NewPredictionRegW(clk, reset,  FlushW, ~StallW, NewBPDirPredM, NewBPDirPredW);
+  openhw_flopenrc #(2) NewPredictionRegW(clk, reset,  FlushW, ~StallW, NewBPDirPredM, NewBPDirPredW);
 
   assign BPDirPredWrongE = PCSrcE != BPDirPredM[1] & BranchE;
 
@@ -92,7 +92,7 @@ module localaheadbp import cvw::*; #(parameter cvw_t P,
   assign IndexLHRM = {PCW[m+1] ^ PCW[1], PCW[m:2]};
   assign IndexLHRNextF = {PCNextF[m+1] ^ PCNextF[1], PCNextF[m:2]};
 
-  ram2p1r1wbe #(P, 2**m, k) BHT(.clk(clk),
+  openhw_ram2p1r1wbe #(P, 2**m, k) BHT(.clk(clk),
     .ce1(~StallF), .ce2(~StallW & ~FlushW),
     .ra1(IndexLHRNextF),
     .rd1(LHRF),
@@ -101,15 +101,15 @@ module localaheadbp import cvw::*; #(parameter cvw_t P,
     .we2(BranchM),
     .bwe2('1));  
 
-  flopenrc #(1) PCSrcMReg(clk, reset, FlushM, ~StallM, PCSrcE, PCSrcM);
+  openhw_flopenrc #(1) PCSrcMReg(clk, reset, FlushM, ~StallM, PCSrcE, PCSrcM);
     
   //flopenrc #(k) LHRFReg(clk, reset, FlushD, ~StallF, LHRNextF, LHRF);
   //assign LHRF = LHRNextF;
-  flopenrc #(k) LHRDReg(clk, reset, FlushD, ~StallD, LHRF, LHRD);
-  flopenrc #(k) LHREReg(clk, reset, FlushE, ~StallE, LHRD, LHRE);
-  flopenrc #(k) LHRMReg(clk, reset, FlushM, ~StallM, LHRE, LHRM);
-  flopenrc #(k) LHRWReg(clk, reset, FlushW, ~StallW, LHRM, LHRW);
+  openhw_flopenrc #(k) LHRDReg(clk, reset, FlushD, ~StallD, LHRF, LHRD);
+  openhw_flopenrc #(k) LHREReg(clk, reset, FlushE, ~StallE, LHRD, LHRE);
+  openhw_flopenrc #(k) LHRMReg(clk, reset, FlushM, ~StallM, LHRE, LHRM);
+  openhw_flopenrc #(k) LHRWReg(clk, reset, FlushW, ~StallW, LHRM, LHRW);
 
-  flopenr #(XLEN) PCWReg(clk, reset, ~StallW, PCM, PCW);
+  openhw_flopenr #(XLEN) PCWReg(clk, reset, ~StallW, PCM, PCW);
 
 endmodule

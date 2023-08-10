@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fdivsqrtfsm import cvw::*;  #(parameter cvw_t P) (
+module openhw_fdivsqrtfsm import cvw::*;  #(parameter cvw_t P) (
   input  logic                clk, reset, 
   input  logic                XInfE, YInfE, 
   input  logic                XZeroE, YZeroE, 

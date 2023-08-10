@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module privpiperegs (
+module openhw_privpiperegs (
   input  logic         clk, reset,  
   input  logic         StallD, StallE, StallM,
   input  logic         FlushD, FlushE, FlushM,
@@ -44,13 +44,13 @@ module privpiperegs (
   logic                IllegalIEUFPUInstrE; 
 
   // pipeline fault signals
-  flopenrc #(3) faultregD(clk, reset, FlushD, ~StallD,
+  openhw_flopenrc #(3) faultregD(clk, reset, FlushD, ~StallD,
                   {InstrPageFaultF, InstrAccessFaultF, HPTWInstrAccessFaultF},
                   {InstrPageFaultD, InstrAccessFaultD, HPTWInstrAccessFaultD});
-  flopenrc #(4) faultregE(clk, reset, FlushE, ~StallE,
+  openhw_flopenrc #(4) faultregE(clk, reset, FlushE, ~StallE,
                   {IllegalIEUFPUInstrD, InstrPageFaultD, InstrAccessFaultD, HPTWInstrAccessFaultD}, 
                   {IllegalIEUFPUInstrE, InstrPageFaultE, InstrAccessFaultE, HPTWInstrAccessFaultE});
-  flopenrc #(4) faultregM(clk, reset, FlushM, ~StallM,
+  openhw_flopenrc #(4) faultregM(clk, reset, FlushM, ~StallM,
                   {IllegalIEUFPUInstrE, InstrPageFaultE, InstrAccessFaultE, HPTWInstrAccessFaultE},
                   {IllegalIEUFPUInstrM, InstrPageFaultM, InstrAccessFaultM, HPTWInstrAccessFaultM});
 endmodule

@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module controller import cvw::*;  #(parameter cvw_t P) (
+module openhw_controller import cvw::*;  #(parameter cvw_t P) (
   input  logic        clk, reset,
   // Decode stage control signals
   input  logic        StallD, FlushD,          // Stall, flush Decode stage
@@ -310,7 +310,7 @@ module controller import cvw::*;  #(parameter cvw_t P) (
     logic BSubArithD;                     // TRUE for BMU ext, clr, andn, orn, xnor
     logic BALUSrcBD;                      // BMU alu src select signal
 
-    bmuctrl #(P) bmuctrl(.clk, .reset, .StallD, .FlushD, .InstrD, .ALUOpD, .BSelectD, .ZBBSelectD, 
+    openhw_bmuctrl #(P) bmuctrl(.clk, .reset, .StallD, .FlushD, .InstrD, .ALUOpD, .BSelectD, .ZBBSelectD, 
       .BRegWriteD, .BALUSrcBD, .BW64D, .BSubArithD, .IllegalBitmanipInstrD, .StallE, .FlushE, 
       .ALUSelectD, .BSelectE, .ZBBSelectE, .BRegWriteE, .BALUControlE, .BMUActiveE);
     if (P.ZBA_SUPPORTED) begin
@@ -386,10 +386,10 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   end
 
   // Decode stage pipeline control register
-  flopenrc #(1)  controlregD(clk, reset, FlushD, ~StallD, 1'b1, InstrValidD);
+  openhw_flopenrc #(1)  controlregD(clk, reset, FlushD, ~StallD, 1'b1, InstrValidD);
 
   // Execute stage pipeline control register and logic
-  flopenrc #(35) controlregE(clk, reset, FlushE, ~StallE,
+  openhw_flopenrc #(35) controlregE(clk, reset, FlushE, ~StallE,
                            {ALUSelectD, RegWriteD, ResultSrcD, MemRWD, JumpD, BranchD, ALUSrcAD, ALUSrcBD, ALUResultSrcD, CSRReadD, CSRWriteD, PrivilegedD, Funct3D, W64D, SubArithD, MDUD, AtomicD, InvalidateICacheD, FlushDCacheD, FenceD, CMOpD, IFUPrefetchD, LSUPrefetchD, InstrValidD},
                            {ALUSelectE, IEURegWriteE, ResultSrcE, MemRWE, JumpE, BranchE, ALUSrcAE, ALUSrcBE, ALUResultSrcE, CSRReadE, CSRWriteE, PrivilegedE, Funct3E, W64E, SubArithE, MDUE, AtomicE, InvalidateICacheE, FlushDCacheE, FenceE, CMOpE, IFUPrefetchE, LSUPrefetchE, InstrValidE});
 
@@ -398,7 +398,7 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   //  Hence, only eq and lt flags are needed
   assign BranchSignedE = (~(Funct3E[2:1] == 2'b11) & BranchE);
   assign {eqE, ltE} = FlagsE;
-  mux2 #(1) branchflagmux(eqE, ltE, Funct3E[2], BranchFlagE);
+  openhw_mux2 #(1) branchflagmux(eqE, ltE, Funct3E[2], BranchFlagE);
   assign BranchTakenE = BranchFlagE ^ Funct3E[0];
   assign PCSrcE = JumpE | BranchE & BranchTakenE;
 
@@ -410,12 +410,12 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   assign IntDivE = MDUE & Funct3E[2]; // Integer division operation
   
   // Memory stage pipeline control register
-  flopenrc #(25) controlregM(clk, reset, FlushM, ~StallM,
+  openhw_flopenrc #(25) controlregM(clk, reset, FlushM, ~StallM,
                          {RegWriteE, ResultSrcE, MemRWE, CSRReadE, CSRWriteE, PrivilegedE, Funct3E, FWriteIntE, AtomicE, InvalidateICacheE, FlushDCacheE, FenceE, InstrValidE, IntDivE, CMOpE, LSUPrefetchE},
                          {RegWriteM, ResultSrcM, MemRWM, CSRReadM, CSRWriteM, PrivilegedM, Funct3M, FWriteIntM, AtomicM, InvalidateICacheM, FlushDCacheM, FenceM, InstrValidM, IntDivM, CMOpM, LSUPrefetchM});
   
   // Writeback stage pipeline control register
-  flopenrc #(5) controlregW(clk, reset, FlushW, ~StallW,
+  openhw_flopenrc #(5) controlregW(clk, reset, FlushW, ~StallW,
                          {RegWriteM, ResultSrcM, IntDivM},
                          {RegWriteW, ResultSrcW, IntDivW});  
 

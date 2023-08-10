@@ -28,7 +28,7 @@
 
 /* verilator lint_off UNOPTFLAT */
 
-module divstep #(parameter XLEN) (
+module openhw_divstep #(parameter XLEN) (
   input  logic [XLEN-1:0] W,     // Residual in
   input  logic [XLEN-1:0] XQ,    // bits of dividend X and quotient Q in
   input  logic [XLEN-1:0] DAbsB, // complement of absolute value of divisor D (for subtraction)

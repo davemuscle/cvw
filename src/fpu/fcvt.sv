@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fcvt import cvw::*;  #(parameter cvw_t P) (
+module openhw_fcvt import cvw::*;  #(parameter cvw_t P) (
   input  logic                    Xs,           // input's sign
   input  logic [P.NE-1:0]         Xe,           // input's exponent
   input  logic [P.NF:0]           Xm,           // input's fraction
@@ -100,7 +100,7 @@ module fcvt import cvw::*;  #(parameter cvw_t P) (
   // used as shifter input in postprocessor
   assign LzcIn = LzcInFull[P.CVTLEN-1:0];
   
-  lzc #(P.CVTLEN+1) lzc (.num(LzcInFull), .ZeroCnt(LeadingZeros));
+  openhw_lzc #(P.CVTLEN+1) openhw_lzc (.num(LzcInFull), .ZeroCnt(LeadingZeros));
   
   ///////////////////////////////////////////////////////////////////////////
   // exp calculations

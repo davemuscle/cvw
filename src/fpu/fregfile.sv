@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fregfile #(parameter FLEN) (
+module openhw_fregfile #(parameter FLEN) (
   input logic              clk, reset,
   input logic              we4,             // write enable
   input logic [4:0]        a1, a2, a3, a4,  // adresses

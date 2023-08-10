@@ -30,7 +30,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module pmpadrdec import cvw::*;  #(parameter cvw_t P) (
+module openhw_pmpadrdec import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.PA_BITS-1:0]  PhysicalAddress,
   input  logic [7:0]            PMPCfg,
   input  logic [P.PA_BITS-3:0]  PMPAdr,

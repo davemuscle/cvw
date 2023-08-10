@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module csrc  import cvw::*;  #(parameter cvw_t P) (
+module openhw_csrc  import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset,
   input  logic              StallE, StallM, 
   input  logic              FlushM, 
@@ -84,7 +84,7 @@ module csrc  import cvw::*;  #(parameter cvw_t P) (
 
   // Interface signals
   flopenrc #(2) LoadStallEReg(.clk, .reset, .clear(1'b0), .en(~StallE), .d({StoreStallD, LoadStallD}), .q({StoreStallE, LoadStallE}));  // don't flush the load stall during a load stall.
-  flopenrc #(2) LoadStallMReg(.clk, .reset, .clear(FlushM), .en(~StallM), .d({StoreStallE, LoadStallE}), .q({StoreStallM, LoadStallM}));  
+  openhw_flopenrc #(2) LoadStallMReg(.clk, .reset, .clear(FlushM), .en(~StallM), .d({StoreStallE, LoadStallE}), .q({StoreStallM, LoadStallM}));  
   
   // Determine when to increment each counter
   assign CounterEvent[0]    = 1'b1;                                                      // MCYCLE always increments

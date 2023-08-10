@@ -29,7 +29,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module spill import cvw::*;  #(parameter cvw_t P) (
+module openhw_spill import cvw::*;  #(parameter cvw_t P) (
   input logic               clk,               
   input logic               reset,
   input logic               StallD, FlushD,
@@ -63,14 +63,14 @@ module spill import cvw::*;  #(parameter cvw_t P) (
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // compute PCF+2 from the raw PC+4
-  mux2 #(P.XLEN) pcplus2mux(.d0({PCF[P.XLEN-1:2], 2'b10}), .d1({PCPlus4F, 2'b00}), .s(PCF[1]), .y(PCPlus2NextF));
+  openhw_mux2 #(P.XLEN) pcplus2mux(.d0({PCF[P.XLEN-1:2], 2'b10}), .d1({PCPlus4F, 2'b00}), .s(PCF[1]), .y(PCPlus2NextF));
   // select between PCNextF and PCF+2
-  mux2 #(P.XLEN) pcnextspillmux(.d0(PCNextF), .d1(PCPlus2NextF), .s(SelSpillNextF & ~FlushD), .y(PCSpillNextF));
+  openhw_mux2 #(P.XLEN) pcnextspillmux(.d0(PCNextF), .d1(PCPlus2NextF), .s(SelSpillNextF & ~FlushD), .y(PCSpillNextF));
   // select between PCF and PCF+2
   // not required for functional correctness, but improves critical path.  pcspillf ends up on the hptw's ihadr 
   // and into the dmmu.  Cutting the path here removes the PC+4 adder.
-  flopr #(P.XLEN) pcplus2reg(clk, reset, PCPlus2NextF, PCPlus2F);
-  mux2 #(P.XLEN) pcspillmux(.d0(PCF), .d1(PCPlus2F), .s(SelSpillF), .y(PCSpillF));
+  openhw_flopr #(P.XLEN) pcplus2reg(clk, reset, PCPlus2NextF, PCPlus2F);
+  openhw_mux2 #(P.XLEN) pcspillmux(.d0(PCF), .d1(PCPlus2F), .s(SelSpillF), .y(PCSpillF));
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Detect spill
@@ -102,10 +102,10 @@ module spill import cvw::*;  #(parameter cvw_t P) (
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // save the first 2 bytes
-  flopenr #(16) SpillInstrReg(clk, reset, SpillSaveF, InstrRawF[15:0], InstrFirstHalfF);
+  openhw_flopenr #(16) SpillInstrReg(clk, reset, SpillSaveF, InstrRawF[15:0], InstrFirstHalfF);
 
   // merge together
-  mux2 #(32) postspillmux(InstrRawF, {InstrRawF[15:0], InstrFirstHalfF}, SpillF, PostSpillInstrRawF);
+  openhw_mux2 #(32) postspillmux(InstrRawF, {InstrRawF[15:0], InstrFirstHalfF}, SpillF, PostSpillInstrRawF);
 
   // Need to use always comb to avoid pessimistic x propagation if PostSpillInstrRawF is x
   always_comb

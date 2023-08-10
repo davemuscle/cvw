@@ -23,7 +23,7 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ///////////////////////////////////////////
 
-module decoder #(parameter BINARY_BITS = 3) (
+module openhw_decoder #(parameter BINARY_BITS = 3) (
   input  logic [BINARY_BITS-1:0]      binary,
   output logic [(2**BINARY_BITS)-1:0] onehot
 );

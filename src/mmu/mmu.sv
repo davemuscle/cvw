@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module mmu import cvw::*;  #(parameter cvw_t P,
+module openhw_mmu import cvw::*;  #(parameter cvw_t P,
                              parameter TLB_ENTRIES = 8, IMMU = 0) (
   input  logic                 clk, reset,
   input  logic [P.XLEN-1:0]    SATP_REGW,          // Current value of satp CSR (from privileged unit)
@@ -76,7 +76,7 @@ module mmu import cvw::*;  #(parameter cvw_t P,
     logic ReadAccess, WriteAccess;
     assign ReadAccess = ExecuteAccessF | ReadAccessM; // execute also acts as a TLB read.  Execute and Read are never active for the same MMU, so safe to mix pipestages
     assign WriteAccess = WriteAccessM;
-    tlb #(.P(P), .TLB_ENTRIES(TLB_ENTRIES), .ITLB(IMMU)) tlb(
+    openhw_tlb #(.P(P), .TLB_ENTRIES(TLB_ENTRIES), .ITLB(IMMU)) tlb(
           .clk, .reset,
           .SATP_MODE(SATP_REGW[P.XLEN-1:P.XLEN-P.SVMODE_BITS]),
           .SATP_ASID(SATP_REGW[P.ASID_BASE+P.ASID_BITS-1:P.ASID_BASE]),
@@ -95,20 +95,20 @@ module mmu import cvw::*;  #(parameter cvw_t P,
   // If translation is occuring, select translated physical address from TLB
   // the lower 12 bits are the page offset. These are never changed from the orginal
   // non translated address.
-  mux2 #(P.PA_BITS-12) addressmux(VAdr[P.PA_BITS-1:12], TLBPAdr[P.PA_BITS-1:12], Translate, PhysicalAddress[P.PA_BITS-1:12]);
+  openhw_mux2 #(P.PA_BITS-12) addressmux(VAdr[P.PA_BITS-1:12], TLBPAdr[P.PA_BITS-1:12], Translate, PhysicalAddress[P.PA_BITS-1:12]);
   assign PhysicalAddress[11:0] = VAdr[11:0];
   
   ///////////////////////////////////////////
   // Check physical memory accesses
   ///////////////////////////////////////////
 
-  pmachecker #(P) pmachecker(.PhysicalAddress, .Size,
+  openhw_pmachecker #(P) pmachecker(.PhysicalAddress, .Size,
     .AtomicAccessM, .ExecuteAccessF, .WriteAccessM, .ReadAccessM,
     .Cacheable, .Idempotent, .SelTIM,
     .PMAInstrAccessFaultF, .PMALoadAccessFaultM, .PMAStoreAmoAccessFaultM);
  
   if (P.PMP_ENTRIES > 0) begin : pmp
-    pmpchecker #(P) pmpchecker(.PhysicalAddress, .PrivilegeModeW,
+    openhw_pmpchecker #(P) pmpchecker(.PhysicalAddress, .PrivilegeModeW,
       .PMPCFG_ARRAY_REGW, .PMPADDR_ARRAY_REGW,
       .ExecuteAccessF, .WriteAccessM, .ReadAccessM,
       .PMPInstrAccessFaultF, .PMPLoadAccessFaultM, .PMPStoreAmoAccessFaultM);

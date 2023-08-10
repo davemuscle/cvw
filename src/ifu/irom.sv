@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module irom import cvw::*;  #(parameter cvw_t P) (
+module openhw_irom import cvw::*;  #(parameter cvw_t P) (
   input logic              clk, 
   input logic              ce,        // Chip Enable.  0: Holds IROMInstrF constant
   input logic [P.XLEN-1:0] Adr,       // PCNextFSpill
@@ -38,9 +38,9 @@ module irom import cvw::*;  #(parameter cvw_t P) (
   logic [P.XLEN-1:0] IROMInstrFFull;
   logic [31:0]       RawIROMInstrF;
   logic [1:0]        AdrD;
-  flopen #(2) AdrReg(clk, ce, Adr[2:1], AdrD);
+  openhw_flopen #(2) AdrReg(clk, ce, Adr[2:1], AdrD);
 
-  rom1p1r #(ADDR_WDITH, P.XLEN) rom(.clk, .ce, .addr(Adr[ADDR_WDITH+OFFSET-1:OFFSET]), .dout(IROMInstrFFull));
+  openhw_rom1p1r #(ADDR_WDITH, P.XLEN) rom(.clk, .ce, .addr(Adr[ADDR_WDITH+OFFSET-1:OFFSET]), .dout(IROMInstrFFull));
   if (P.XLEN == 32) assign RawIROMInstrF = IROMInstrFFull;
   else              begin
   // IROM is aligned to XLEN words, but instructions are 32 bits.  Select between the two

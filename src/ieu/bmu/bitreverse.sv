@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module bitreverse #(parameter WIDTH=32) (
+module openhw_bitreverse #(parameter WIDTH=32) (
   input  logic [WIDTH-1:0] A,
   output logic [WIDTH-1:0] RevA);
 

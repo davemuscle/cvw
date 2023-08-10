@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module postprocess import cvw::*;  #(parameter cvw_t P) (
+module openhw_postprocess import cvw::*;  #(parameter cvw_t P) (
   // general signals
   input logic                              Xs, Ys,              // input signs
   input logic  [P.NF:0]                    Xm, Ym, Zm,          // input mantissas
@@ -140,13 +140,13 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   ///////////////////////////////////////////////////////////////////////////////
 
   // final claulations before shifting
-  cvtshiftcalc #(P) cvtshiftcalc(.ToInt, .CvtCe, .CvtResSubnormUf, .Xm, .CvtLzcIn,  
+  openhw_cvtshiftcalc #(P) cvtshiftcalc(.ToInt, .CvtCe, .CvtResSubnormUf, .Xm, .CvtLzcIn,  
       .XZero, .IntToFp, .OutFmt, .CvtResUf, .CvtShiftIn);
 
-  fmashiftcalc #(P) fmashiftcalc(.FmaSm, .FmaSCnt, .Fmt, .NormSumExp, .FmaSe,
+  openhw_fmashiftcalc #(P) fmashiftcalc(.FmaSm, .FmaSCnt, .Fmt, .NormSumExp, .FmaSe,
       .FmaSZero, .FmaPreResultSubnorm, .FmaShiftAmt, .FmaShiftIn);
 
-  divshiftcalc #(P) divshiftcalc(.DivQe, .DivQm, .DivResSubnorm, .DivSubnormShiftPos, .DivShiftAmt, .DivShiftIn);
+  openhw_divshiftcalc #(P) divshiftcalc(.DivQe, .DivQm, .DivResSubnorm, .DivSubnormShiftPos, .DivShiftAmt, .DivShiftIn);
 
   // select which unit's output to shift
   always_comb
@@ -170,10 +170,10 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
     endcase
   
   // main normalization shift
-  normshift #(P) normshift (.ShiftIn, .ShiftAmt, .Shifted);
+  openhw_normshift #(P) openhw_normshift (.ShiftIn, .ShiftAmt, .Shifted);
 
   // correct for LZA/divsqrt error
-  shiftcorrection #(P) shiftcorrection(.FmaOp, .FmaPreResultSubnorm, .NormSumExp,
+  openhw_shiftcorrection #(P) shiftcorrection(.FmaOp, .FmaPreResultSubnorm, .NormSumExp,
       .DivResSubnorm, .DivSubnormShiftPos, .DivOp, .DivQe, .Qe, .FmaSZero, .Shifted, .FmaMe, .Mf);
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -187,9 +187,9 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   // round to nearest max magnitude
 
   // calulate result sign used in rounding unit
-  roundsign roundsign(.FmaOp, .DivOp, .CvtOp, .Sqrt, .FmaSs, .Xs, .Ys, .CvtCs, .Ms);
+  openhw_roundsign roundsign(.FmaOp, .DivOp, .CvtOp, .Sqrt, .FmaSs, .Xs, .Ys, .CvtCs, .Ms);
 
-  round #(P) round(.OutFmt, .Frm, .FmaASticky, .Plus1, .PostProcSel, .CvtCe, .Qe,
+  openhw_round #(P) round(.OutFmt, .Frm, .FmaASticky, .Plus1, .PostProcSel, .CvtCe, .Qe,
       .Ms, .FmaMe, .FmaOp, .CvtOp, .CvtResSubnormUf, .Mf, .ToInt,  .CvtResUf,
       .DivSticky, .DivOp, .UfPlus1, .FullRe, .Rf, .Re, .Sticky, .Round, .Guard, .Me);
 
@@ -197,14 +197,14 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   // Sign calculation
   ///////////////////////////////////////////////////////////////////////////////
 
-  resultsign resultsign(.Frm, .FmaPs, .FmaAs, .Round, .Sticky, .Guard,
+  openhw_resultsign resultsign(.Frm, .FmaPs, .FmaAs, .Round, .Sticky, .Guard,
       .FmaOp, .ZInf, .InfIn, .FmaSZero, .Mult, .Ms, .Rs);
 
   ///////////////////////////////////////////////////////////////////////////////
   // Flags
   ///////////////////////////////////////////////////////////////////////////////
 
-  flags #(P) flags(.XSNaN, .YSNaN, .ZSNaN, .XInf, .YInf, .ZInf, .InfIn, .XZero, .YZero, 
+  openhw_flags #(P) flags(.XSNaN, .YSNaN, .ZSNaN, .XInf, .YInf, .ZInf, .InfIn, .XZero, .YZero, 
               .Xs, .Sqrt, .ToInt, .IntToFp, .Int64, .Signed, .OutFmt, .CvtCe,
               .NaNIn, .FmaAs, .FmaPs, .Round, .IntInvalid, .DivByZero,
               .Guard, .Sticky, .UfPlus1, .CvtOp, .DivOp, .FmaOp, .FullRe, .Plus1,
@@ -214,9 +214,9 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   // Select the result
   ///////////////////////////////////////////////////////////////////////////////
 
-  negateintres #(P) negateintres(.Xs, .Shifted, .Signed, .Int64, .Plus1, .CvtNegResMsbs, .CvtNegRes);
+  openhw_negateintres #(P) negateintres(.Xs, .Shifted, .Signed, .Int64, .Plus1, .CvtNegResMsbs, .CvtNegRes);
 
-  specialcase #(P) specialcase(.Xs, .Xm, .Ym, .Zm, .XZero, .IntInvalid,
+  openhw_specialcase #(P) specialcase(.Xs, .Xm, .Ym, .Zm, .XZero, .IntInvalid,
       .IntZero, .Frm, .OutFmt, .XNaN, .YNaN, .ZNaN, .CvtResUf, 
       .NaNIn, .IntToFp, .Int64, .Signed, .CvtOp, .FmaOp, .Plus1, .Invalid, .Overflow, .InfIn, .CvtNegRes,
       .XInf, .YInf, .DivOp, .DivByZero, .FullRe, .CvtCe, .Rs, .Re, .Rf, .PostProcRes, .FCvtIntRes);

@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module RASPredictor import cvw::*;  #(parameter cvw_t P, 
+module openhw_RASPredictor import cvw::*;  #(parameter cvw_t P, 
                                       parameter StackSize = 16 )(
   input  logic             clk,
   input  logic             reset, 
@@ -75,10 +75,10 @@ module RASPredictor import cvw::*;  #(parameter cvw_t P,
 
   assign P1 = 1;
   assign M1 = '1; // -1
-  mux2 #(Depth) PtrMux(P1, M1, DecrementPtr, IncDecPtr);
+  openhw_mux2 #(Depth) PtrMux(P1, M1, DecrementPtr, IncDecPtr);
   assign NextPtr = Ptr + IncDecPtr;
 
-  flopenr #(Depth) PTR(clk, reset, CounterEn, NextPtr, Ptr);
+  openhw_flopenr #(Depth) PTR(clk, reset, CounterEn, NextPtr, Ptr);
 
   // RAS must be reset. 
   always_ff @ (posedge clk) begin

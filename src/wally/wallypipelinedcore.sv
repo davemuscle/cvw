@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
+module openhw_wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
    input  logic                  clk, reset,
    // Privileged
    input  logic                  MTimerInt, MExtInt, SExtInt, MSwInt,
@@ -166,7 +166,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
   logic                          wfiM, IntPendingM;
 
   // instruction fetch unit: PC, branch prediction, instruction cache
-  ifu #(P) ifu(.clk, .reset,
+  openhw_ifu #(P) ifu(.clk, .reset,
     .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
     .InstrValidM, .InstrValidE, .InstrValidD,
     .BranchD, .BranchE, .JumpD, .JumpE, .ICacheStallF,
@@ -189,7 +189,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
     .PMPCFG_ARRAY_REGW,  .PMPADDR_ARRAY_REGW, .InstrAccessFaultF, .InstrUpdateDAF); 
     
   // integer execution unit: integer register file, datapath and controller
-  ieu #(P) ieu(.clk, .reset,
+  openhw_ieu #(P) ieu(.clk, .reset,
      // Decode Stage interface
      .InstrD, .STATUS_FS, .ENVCFG_CBE, .IllegalIEUFPUInstrD, .IllegalBaseInstrD,
      // Execute Stage interface
@@ -212,7 +212,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .FCvtIntStallD, .LoadStallD, .MDUStallD, .CSRRdStallD, .PCSrcE,
      .CSRReadM, .CSRWriteM, .PrivilegedM, .CSRWriteFenceM, .InvalidateICacheM, .StoreStallD); 
 
-  lsu #(P) lsu(
+  openhw_lsu #(P) lsu(
     .clk, .reset, .StallM, .FlushM, .StallW, .FlushW,
     // CPU interface
     .MemRWM, .Funct3M, .Funct7M(InstrM[31:25]), .AtomicM,
@@ -260,7 +260,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
   end
 
   // global stall and flush control  
-  hazard  hzu(
+  openhw_hazard  hzu(
     .BPWrongE, .CSRWriteFenceM, .RetM, .TrapM,
     .LoadStallD, .StoreStallD, .MDUStallD, .CSRRdStallD,
     .LSUStallM, .IFUStallF,
@@ -274,7 +274,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
 
   // privileged unit
   if (P.ZICSR_SUPPORTED) begin:priv
-    privileged #(P) priv(
+    openhw_privileged #(P) priv(
       .clk, .reset,
       .FlushD, .FlushE, .FlushM, .FlushW, .StallD, .StallE, .StallM, .StallW,
       .CSRReadM, .CSRWriteM, .SrcAM, .PCM, .PC2NextF,
@@ -308,7 +308,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
 
   // multiply/divide unit
   if (P.M_SUPPORTED | P.ZMMUL_SUPPORTED) begin:mdu
-    mdu #(P) mdu(.clk, .reset, .StallM, .StallW, .FlushE, .FlushM, .FlushW,
+    openhw_mdu #(P) mdu(.clk, .reset, .StallM, .StallW, .FlushE, .FlushM, .FlushW,
       .ForwardedSrcAE, .ForwardedSrcBE, 
       .Funct3E, .Funct3M, .IntDivE, .W64E, .MDUActiveE,
       .MDUResultW, .DivBusyE); 
@@ -319,7 +319,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
 
   // floating point unit
   if (P.F_SUPPORTED) begin:fpu
-    fpu #(P) fpu(
+    openhw_fpu #(P) fpu(
       .clk, .reset,
       .FRM_REGW,                           // Rounding mode from CSR
       .InstrD,                             // instruction from IFU

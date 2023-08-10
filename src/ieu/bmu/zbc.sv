@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module zbc #(parameter WIDTH=32) (
+module openhw_zbc #(parameter WIDTH=32) (
   input  logic [WIDTH-1:0] A, RevA, B,       // Operands
   input  logic [2:0]       Funct3,           // Indicates operation to perform
   output logic [WIDTH-1:0] ZBCResult);       // ZBC result
@@ -36,14 +36,14 @@ module zbc #(parameter WIDTH=32) (
   logic [WIDTH-1:0] RevB;
   logic [WIDTH-1:0] X, Y;
 
-  bitreverse #(WIDTH) brB(B, RevB);
+  openhw_bitreverse #(WIDTH) brB(B, RevB);
 
-  mux3 #(WIDTH) xmux({RevA[WIDTH-2:0], {1'b0}}, RevA, A, ~Funct3[1:0], X);
-  mux2 #(WIDTH) ymux(RevB, B, ~Funct3[1], Y);
+  openhw_mux3 #(WIDTH) xmux({RevA[WIDTH-2:0], {1'b0}}, RevA, A, ~Funct3[1:0], X);
+  openhw_mux2 #(WIDTH) ymux(RevB, B, ~Funct3[1], Y);
 
-  clmul #(WIDTH) clm(.X, .Y, .ClmulResult);
+  openhw_clmul #(WIDTH) clm(.X, .Y, .ClmulResult);
   
-  bitreverse  #(WIDTH) brClmulResult(ClmulResult, RevClmulResult);
+  openhw_bitreverse  #(WIDTH) brClmulResult(ClmulResult, RevClmulResult);
 
-  mux2 #(WIDTH) zbcresultmux(ClmulResult, RevClmulResult, Funct3[1], ZBCResult);
+  openhw_mux2 #(WIDTH) zbcresultmux(ClmulResult, RevClmulResult, Funct3[1], ZBCResult);
 endmodule

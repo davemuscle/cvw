@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module adrdec #(parameter PA_BITS) (
+module openhw_adrdec #(parameter PA_BITS) (
   input  logic [PA_BITS-1:0]  PhysicalAddress,  // Physical address to decode
   input  logic [PA_BITS-1:0]  Base, Range,      // Base and range of peripheral addresses
   input  logic                Supported,        // Is this peripheral supported?

@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module cachefsm #(parameter READ_ONLY_CACHE = 0) (
+module openhw_cachefsm #(parameter READ_ONLY_CACHE = 0) (
   input  logic       clk,
   input  logic       reset,
   // hazard and privilege unit
@@ -99,7 +99,7 @@ module cachefsm #(parameter READ_ONLY_CACHE = 0) (
   // special case on reset. When the fsm first exists reset the
   // PCNextF will no longer be pointing to the correct address.
   // But PCF will be the reset vector.
-  flop #(1) resetDelayReg(.clk, .d(reset), .q(resetDelay));
+  openhw_flop #(1) resetDelayReg(.clk, .d(reset), .q(resetDelay));
 
   always_ff @(posedge clk)
     if (reset | FlushStage)    CurrState <= #1 STATE_READY;

@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module synchronizer ( 
+module openhw_synchronizer ( 
   input  logic clk,
   input  logic d, 
   output logic q);

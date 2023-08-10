@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fpu import cvw::*;  #(parameter cvw_t P) (
+module openhw_fpu import cvw::*;  #(parameter cvw_t P) (
   input  logic                 clk,
   input  logic                 reset,
   // Hazards
@@ -166,7 +166,7 @@ module fpu import cvw::*;  #(parameter cvw_t P) (
   //////////////////////////////////////////////////////////////////////////////////////////
 
   // calculate FP control signals
-  fctrl #(P) fctrl (.Funct7D(InstrD[31:25]), .OpD(InstrD[6:0]), .Rs2D(InstrD[24:20]), .Funct3D(InstrD[14:12]), 
+  openhw_fctrl #(P) openhw_fctrl (.Funct7D(InstrD[31:25]), .OpD(InstrD[6:0]), .Rs2D(InstrD[24:20]), .Funct3D(InstrD[14:12]), 
               .Funct3E, .IntDivE, .InstrD,
               .StallE, .StallM, .StallW, .FlushE, .FlushM, .FlushW, .FRM_REGW, .STATUS_FS, .FDivBusyE,
               .reset, .clk, .FRegWriteE, .FRegWriteM, .FRegWriteW, .FrmM, .FmtE, .FmtM,
@@ -176,36 +176,36 @@ module fpu import cvw::*;  #(parameter cvw_t P) (
               .Adr1D, .Adr2D, .Adr3D, .Adr1E, .Adr2E, .Adr3E);
 
   // FP register file
-  fregfile #(P.FLEN) fregfile (.clk, .reset, .we4(FRegWriteW),
+  openhw_fregfile #(P.FLEN) openhw_fregfile (.clk, .reset, .we4(FRegWriteW),
     .a1(InstrD[19:15]), .a2(InstrD[24:20]), .a3(InstrD[31:27]), 
     .a4(RdW), .wd4(FResultW),
     .rd1(FRD1D), .rd2(FRD2D), .rd3(FRD3D));  
 
   // D/E pipeline registers  
-  flopenrc #(P.FLEN) DEReg1(clk, reset, FlushE, ~StallE, FRD1D, FRD1E);
-  flopenrc #(P.FLEN) DEReg2(clk, reset, FlushE, ~StallE, FRD2D, FRD2E);
-  flopenrc #(P.FLEN) DEReg3(clk, reset, FlushE, ~StallE, FRD3D, FRD3E);
+  openhw_flopenrc #(P.FLEN) DEReg1(clk, reset, FlushE, ~StallE, FRD1D, FRD1E);
+  openhw_flopenrc #(P.FLEN) DEReg2(clk, reset, FlushE, ~StallE, FRD2D, FRD2E);
+  openhw_flopenrc #(P.FLEN) DEReg3(clk, reset, FlushE, ~StallE, FRD3D, FRD3E);
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Execute Stage: hazards, forwarding, unpacking, execution units
   //////////////////////////////////////////////////////////////////////////////////////////
 
   // Hazard unit for FPU: determines if any forwarding or stalls are needed
-  fhazard fhazard(.Adr1D, .Adr2D, .Adr3D, .Adr1E, .Adr2E, .Adr3E, 
+  openhw_fhazard fhazard(.Adr1D, .Adr2D, .Adr3D, .Adr1E, .Adr2E, .Adr3E, 
     .FRegWriteE, .FRegWriteM, .FRegWriteW, .RdE, .RdM, .RdW, .FResSelM, 
     .XEnD, .YEnD, .ZEnD, .FPUStallD, .ForwardXE, .ForwardYE, .ForwardZE);
 
   // forwarding muxs
-  mux3  #(P.FLEN)  fxemux (FRD1E, FResultW, PreFpResM, ForwardXE, XE);
-  mux3  #(P.FLEN)  fyemux (FRD2E, FResultW, PreFpResM, ForwardYE, PreYE);
-  mux3  #(P.FLEN)  fzemux (FRD3E, FResultW, PreFpResM, ForwardZE, PreZE);
+  openhw_mux3  #(P.FLEN)  fxemux (FRD1E, FResultW, PreFpResM, ForwardXE, XE);
+  openhw_mux3  #(P.FLEN)  fyemux (FRD2E, FResultW, PreFpResM, ForwardYE, PreYE);
+  openhw_mux3  #(P.FLEN)  fzemux (FRD3E, FResultW, PreFpResM, ForwardZE, PreZE);
 
   // Select NAN-boxed value of Y = 1.0 in proper format for fma to add/subtract X*Y+Z
   if(P.FPSIZES == 1) assign BoxedOneE = {2'b0, {P.NE-1{1'b1}}, (P.NF)'(0)};
   else if(P.FPSIZES == 2) 
       mux2 #(P.FLEN) fonemux ({{P.FLEN-P.LEN1{1'b1}}, 2'b0, {P.NE1-1{1'b1}}, (P.NF1)'(0)}, {2'b0, {P.NE-1{1'b1}}, (P.NF)'(0)}, FmtE, BoxedOneE); // NaN boxing zeroes
   else if(P.FPSIZES == 3 | P.FPSIZES == 4) 
-      mux4 #(P.FLEN) fonemux ({{P.FLEN-P.S_LEN{1'b1}}, 2'b0, {P.S_NE-1{1'b1}}, (P.S_NF)'(0)}, 
+      openhw_mux4 #(P.FLEN) fonemux ({{P.FLEN-P.S_LEN{1'b1}}, 2'b0, {P.S_NE-1{1'b1}}, (P.S_NF)'(0)}, 
                               {{P.FLEN-P.D_LEN{1'b1}}, 2'b0, {P.D_NE-1{1'b1}}, (P.D_NF)'(0)}, 
                               {{P.FLEN-P.H_LEN{1'b1}}, 2'b0, {P.H_NE-1{1'b1}}, (P.H_NF)'(0)}, 
                               {2'b0, {P.NE-1{1'b1}}, (P.NF)'(0)}, FmtE, BoxedOneE); // NaN boxing zeroes
@@ -218,15 +218,15 @@ module fpu import cvw::*;  #(parameter cvw_t P) (
   else if(P.FPSIZES == 2) 
     mux2 #(P.FLEN) fmulzeromux ({{P.FLEN-P.LEN1{1'b1}}, {P.LEN1{1'b0}}}, (P.FLEN)'(0), FmtE, BoxedZeroE); // NaN boxing zeroes
   else if(P.FPSIZES == 3 | P.FPSIZES == 4)
-    mux4 #(P.FLEN) fmulzeromux ({{P.FLEN-P.S_LEN{1'b1}}, {P.S_LEN{1'b0}}}, 
+    openhw_mux4 #(P.FLEN) fmulzeromux ({{P.FLEN-P.S_LEN{1'b1}}, {P.S_LEN{1'b0}}}, 
                                 {{P.FLEN-P.D_LEN{1'b1}}, {P.D_LEN{1'b0}}}, 
                                 {{P.FLEN-P.H_LEN{1'b1}}, {P.H_LEN{1'b0}}}, 
                                 (P.FLEN)'(0), FmtE, BoxedZeroE); // NaN boxing zeroes
   assign FmaZSelE = {OpCtrlE[2]&OpCtrlE[1], OpCtrlE[2]&~OpCtrlE[1]};
-  mux3  #(P.FLEN)  fzmulmux (PreZE, BoxedZeroE, PreYE, FmaZSelE, ZE);
+  openhw_mux3  #(P.FLEN)  fzmulmux (PreZE, BoxedZeroE, PreYE, FmaZSelE, ZE);
 
   // unpack unit: splits FP inputs into their parts and classifies SNaN, NaN, Subnorm, Norm, Zero, Infifnity
-  unpack #(P) unpack (.X(XE), .Y(YE), .Z(ZE), .Fmt(FmtE), .Xs(XsE), .Ys(YsE), .Zs(ZsE), 
+  openhw_unpack #(P) openhw_unpack (.X(XE), .Y(YE), .Z(ZE), .Fmt(FmtE), .Xs(XsE), .Ys(YsE), .Zs(ZsE), 
     .Xe(XeE), .Ye(YeE), .Ze(ZeE), .Xm(XmE), .Ym(YmE), .Zm(ZmE), .YEn(YEnE), .FPUActive(FPUActiveE),
     .XNaN(XNaNE), .YNaN(YNaNE), .ZNaN(ZNaNE), .XSNaN(XSNaNE), .XEn(XEnE), 
     .YSNaN(YSNaNE), .ZSNaN(ZSNaNE), .XSubnorm(XSubnormE), 
@@ -234,47 +234,47 @@ module fpu import cvw::*;  #(parameter cvw_t P) (
     .ZEn(ZEnE), .ZInf(ZInfE), .XExpMax(XExpMaxE), .XPostBox(XPostBoxE));
   
   // fused multiply add: fadd/sub, fmul, fmadd/fnmadd/fmsub/fnmsub
-  fma #(P) fma (.Xs(XsE), .Ys(YsE), .Zs(ZsE), .Xe(XeE), .Ye(YeE), .Ze(ZeE), .Xm(XmE), .Ym(YmE), .Zm(ZmE), 
+  openhw_fma #(P) openhw_fma (.Xs(XsE), .Ys(YsE), .Zs(ZsE), .Xe(XeE), .Ye(YeE), .Ze(ZeE), .Xm(XmE), .Ym(YmE), .Zm(ZmE), 
     .XZero(XZeroE), .YZero(YZeroE), .ZZero(ZZeroE), .OpCtrl(OpCtrlE), 
     .As(AsE), .Ps(PsE), .Ss(SsE), .Se(SeE), .Sm(SmE), .InvA(InvAE), .SCnt(SCntE), .ASticky(FmaAStickyE)); 
 
   // divide and square root: fdiv, fsqrt, optionally integer division
-  fdivsqrt #(P) fdivsqrt(.clk, .reset, .FmtE, .XmE, .YmE, .XeE, .YeE, .SqrtE(OpCtrlE[0]), .SqrtM(OpCtrlM[0]),
+  openhw_fdivsqrt #(P) fdivsqrt(.clk, .reset, .FmtE, .XmE, .YmE, .XeE, .YeE, .SqrtE(OpCtrlE[0]), .SqrtM(OpCtrlM[0]),
     .XInfE, .YInfE, .XZeroE, .YZeroE, .XNaNE, .YNaNE, .FDivStartE, .IDivStartE, .XsE,
     .ForwardedSrcAE, .ForwardedSrcBE, .Funct3E, .Funct3M, .IntDivE, .W64E,
     .StallM, .FlushE, .DivStickyM, .FDivBusyE, .IFDivStartE, .FDivDoneE, .QeM, 
     .QmM, .FIntDivResultM);
 
   // compare: fmin/fmax, flt/fle/feq
-  fcmp #(P) fcmp (.Fmt(FmtE), .OpCtrl(OpCtrlE), .Xs(XsE), .Ys(YsE), .Xe(XeE), .Ye(YeE), 
+  openhw_fcmp #(P) openhw_fcmp (.Fmt(FmtE), .OpCtrl(OpCtrlE), .Xs(XsE), .Ys(YsE), .Xe(XeE), .Ye(YeE), 
     .Xm(XmE), .Ym(YmE), .XZero(XZeroE), .YZero(YZeroE), .XNaN(XNaNE), .YNaN(YNaNE), 
     .XSNaN(XSNaNE), .YSNaN(YSNaNE), .X(XE), .Y(YE), .CmpNV(CmpNVE), 
     .CmpFpRes(CmpFpResE), .CmpIntRes(CmpIntResE));
 
   // sign injection: fsgnj/fsgnjx/fsgnjn
-  fsgninj #(P) fsgninj(.OpCtrl(OpCtrlE[1:0]), .Xs(XsE), .Ys(YsE), .X(XPostBoxE), .Fmt(FmtE), .SgnRes(SgnResE));
+  openhw_fsgninj #(P) fsgninj(.OpCtrl(OpCtrlE[1:0]), .Xs(XsE), .Ys(YsE), .X(XPostBoxE), .Fmt(FmtE), .SgnRes(SgnResE));
 
   // classify: fclass
-  fclassify #(P) fclassify (.Xs(XsE), .XSubnorm(XSubnormE), .XZero(XZeroE), .XNaN(XNaNE), 
+  openhw_fclassify #(P) openhw_fclassify (.Xs(XsE), .XSubnorm(XSubnormE), .XZero(XZeroE), .XNaN(XNaNE), 
     .XInf(XInfE), .XSNaN(XSNaNE), .ClassRes(ClassResE));
 
   // convert: fcvt.*.*
-  fcvt #(P) fcvt (.Xs(XsE), .Xe(XeE), .Xm(XmE), .Int(ForwardedSrcAE), .OpCtrl(OpCtrlE), 
+  openhw_fcvt #(P) openhw_fcvt (.Xs(XsE), .Xe(XeE), .Xm(XmE), .Int(ForwardedSrcAE), .OpCtrl(OpCtrlE), 
     .ToInt(FWriteIntE), .XZero(XZeroE), .Fmt(FmtE), .Ce(CeE), .ShiftAmt(CvtShiftAmtE), 
     .ResSubnormUf(CvtResSubnormUfE), .Cs(CsE), .IntZero(IntZeroE), .LzcIn(CvtLzcInE));
 
   // NaN Box SrcA to convert integer to requested FP size
   if(P.FPSIZES == 1) assign AlignedSrcAE = {{P.FLEN-P.XLEN{1'b1}}, ForwardedSrcAE};
   else if(P.FPSIZES == 2) 
-    mux2 #(P.FLEN) SrcAMux ({{P.FLEN-P.LEN1{1'b1}}, ForwardedSrcAE[P.LEN1-1:0]}, {{P.FLEN-P.XLEN{1'b1}}, ForwardedSrcAE}, FmtE, AlignedSrcAE);
+    openhw_mux2 #(P.FLEN) SrcAMux ({{P.FLEN-P.LEN1{1'b1}}, ForwardedSrcAE[P.LEN1-1:0]}, {{P.FLEN-P.XLEN{1'b1}}, ForwardedSrcAE}, FmtE, AlignedSrcAE);
   else if(P.FPSIZES == 3 | P.FPSIZES == 4)
-    mux4 #(P.FLEN) SrcAMux ({{P.FLEN-P.S_LEN{1'b1}}, ForwardedSrcAE[P.S_LEN-1:0]}, 
+    openhw_mux4 #(P.FLEN) SrcAMux ({{P.FLEN-P.S_LEN{1'b1}}, ForwardedSrcAE[P.S_LEN-1:0]}, 
                             {{P.FLEN-P.D_LEN{1'b1}}, ForwardedSrcAE[P.D_LEN-1:0]}, 
                             {{P.FLEN-P.H_LEN{1'b1}}, ForwardedSrcAE[P.H_LEN-1:0]}, 
                             {{P.FLEN-P.XLEN{1'b1}}, ForwardedSrcAE}, FmtE, AlignedSrcAE); // NaN boxing zeroes
 
   // select a result that may be written to the FP register
-  mux3  #(P.FLEN) FResMux(SgnResE, AlignedSrcAE, CmpFpResE, {OpCtrlE[2], &OpCtrlE[1:0]}, PreFpResE);
+  openhw_mux3  #(P.FLEN) FResMux(SgnResE, AlignedSrcAE, CmpFpResE, {OpCtrlE[2], &OpCtrlE[1:0]}, PreFpResE);
   assign PreNVE = CmpNVE&(OpCtrlE[2]|FWriteIntE);
 
   // select the result that may be written to the integer register with fmv - to IEU
@@ -282,11 +282,11 @@ module fpu import cvw::*;  #(parameter cvw_t P) (
     assign mvsgn = XE[P.FLEN-1];
     assign SgnExtXE = XE;
   end else if(P.FPSIZES == 2) begin
-    mux2 #(1)     sgnmux (XE[P.LEN1-1], XE[P.FLEN-1],FmtE, mvsgn);
-    mux2 #(P.FLEN) sgnextmux ({{P.FLEN-P.LEN1{mvsgn}}, XE[P.LEN1-1:0]}, XE, FmtE, SgnExtXE);
+    openhw_mux2 #(1)     sgnmux (XE[P.LEN1-1], XE[P.FLEN-1],FmtE, mvsgn);
+    openhw_mux2 #(P.FLEN) sgnextmux ({{P.FLEN-P.LEN1{mvsgn}}, XE[P.LEN1-1:0]}, XE, FmtE, SgnExtXE);
   end else if(P.FPSIZES == 3 | P.FPSIZES == 4) begin
-    mux4 #(1)     sgnmux (XE[P.H_LEN-1], XE[P.S_LEN-1], XE[P.D_LEN-1], XE[P.LLEN-1], FmtE, mvsgn);
-    mux4 #(P.FLEN) fmulzeromux ({{P.FLEN-P.H_LEN{mvsgn}}, XE[P.H_LEN-1:0]}, 
+    openhw_mux4 #(1)     sgnmux (XE[P.H_LEN-1], XE[P.S_LEN-1], XE[P.D_LEN-1], XE[P.LLEN-1], FmtE, mvsgn);
+    openhw_mux4 #(P.FLEN) fmulzeromux ({{P.FLEN-P.H_LEN{mvsgn}}, XE[P.H_LEN-1:0]}, 
                                 {{P.FLEN-P.S_LEN{mvsgn}}, XE[P.S_LEN-1:0]}, 
                                 {{P.FLEN-P.D_LEN{mvsgn}}, XE[P.D_LEN-1:0]}, 
                                 XE, FmtE, SgnExtXE); 
@@ -296,36 +296,36 @@ module fpu import cvw::*;  #(parameter cvw_t P) (
     assign IntSrcXE = SgnExtXE[P.XLEN-1:0];
   else 
     assign IntSrcXE = {{P.XLEN-P.FLEN{mvsgn}}, SgnExtXE};
-  mux3 #(P.XLEN) IntResMux (ClassResE, IntSrcXE, CmpIntResE, {~FResSelE[1], FResSelE[0]}, FIntResE);
+  openhw_mux3 #(P.XLEN) IntResMux (ClassResE, IntSrcXE, CmpIntResE, {~FResSelE[1], FResSelE[0]}, FIntResE);
 
   // E/M pipe registers
 
   // Need to stall during divsqrt iterations to avoid capturing bad flags from stale forwarded sources
   assign StallUnpackedM = StallM | (FDivBusyE & ~IFDivStartE | FDivDoneE); 
 
-  flopenrc #(P.NF+1) EMFpReg2 (clk, reset, FlushM, ~StallM, XmE, XmM);
-  flopenrc #(P.NF+1) EMFpReg3 (clk, reset, FlushM, ~StallM, YmE, YmM);
-  flopenrc #(P.FLEN) EMFpReg4 (clk, reset, FlushM, ~StallM, {ZeE,ZmE}, {ZeM,ZmM});
-  flopenrc #(P.XLEN) EMFpReg6 (clk, reset, FlushM, ~StallM, FIntResE, FIntResM);
-  flopenrc #(P.FLEN) EMFpReg7 (clk, reset, FlushM, ~StallM, PreFpResE, PreFpResM);
-  flopenr #(13) EMFpReg5 (clk, reset, ~StallUnpackedM, 
+  openhw_flopenrc #(P.NF+1) EMFpReg2 (clk, reset, FlushM, ~StallM, XmE, XmM);
+  openhw_flopenrc #(P.NF+1) EMFpReg3 (clk, reset, FlushM, ~StallM, YmE, YmM);
+  openhw_flopenrc #(P.FLEN) EMFpReg4 (clk, reset, FlushM, ~StallM, {ZeE,ZmE}, {ZeM,ZmM});
+  openhw_flopenrc #(P.XLEN) EMFpReg6 (clk, reset, FlushM, ~StallM, FIntResE, FIntResM);
+  openhw_flopenrc #(P.FLEN) EMFpReg7 (clk, reset, FlushM, ~StallM, PreFpResE, PreFpResM);
+  openhw_flopenr #(13) EMFpReg5 (clk, reset, ~StallUnpackedM, 
     {XsE, YsE, XZeroE, YZeroE, XInfE, YInfE, ZInfE, XNaNE, YNaNE, ZNaNE, XSNaNE, YSNaNE, ZSNaNE},
     {XsM, YsM, XZeroM, YZeroM, XInfM, YInfM, ZInfM, XNaNM, YNaNM, ZNaNM, XSNaNM, YSNaNM, ZSNaNM});     
-  flopenrc #(1)  EMRegCmpFlg (clk, reset, FlushM, ~StallM, PreNVE, PreNVM);      
-  flopenrc #(3*P.NF+4) EMRegFma2(clk, reset, FlushM, ~StallM, SmE, SmM);
-  flopenrc #($clog2(3*P.NF+5)+7+P.NE) EMRegFma4(clk, reset, FlushM, ~StallM,
+  openhw_flopenrc #(1)  EMRegCmpFlg (clk, reset, FlushM, ~StallM, PreNVE, PreNVM);      
+  openhw_flopenrc #(3*P.NF+4) EMRegFma2(clk, reset, FlushM, ~StallM, SmE, SmM);
+  openhw_flopenrc #($clog2(3*P.NF+5)+7+P.NE) EMRegFma4(clk, reset, FlushM, ~StallM,
     {FmaAStickyE, InvAE, SCntE, AsE, PsE, SsE, SeE},
     {FmaAStickyM, InvAM, SCntM, AsM, PsM, SsM, SeM});
-  flopenrc #(P.NE+P.LOGCVTLEN+P.CVTLEN+4) EMRegCvt(clk, reset, FlushM, ~StallM, 
+  openhw_flopenrc #(P.NE+P.LOGCVTLEN+P.CVTLEN+4) EMRegCvt(clk, reset, FlushM, ~StallM, 
     {CeE, CvtShiftAmtE, CvtResSubnormUfE, CsE, IntZeroE, CvtLzcInE},
     {CeM, CvtShiftAmtM, CvtResSubnormUfM, CsM, IntZeroM, CvtLzcInM});
-  flopenrc #(P.FLEN) FWriteDataMReg (clk, reset, FlushM, ~StallM, YE, FWriteDataM);
+  openhw_flopenrc #(P.FLEN) FWriteDataMReg (clk, reset, FlushM, ~StallM, YE, FWriteDataM);
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Memory Stage: postprocessor and result muxes
   //////////////////////////////////////////////////////////////////////////////////////////
 
-  postprocess #(P) postprocess(.Xs(XsM), .Ys(YsM), .Xm(XmM), .Ym(YmM), .Zm(ZmM), .Frm(FrmM), .Fmt(FmtM), 
+  openhw_postprocess #(P) postprocess(.Xs(XsM), .Ys(YsM), .Xm(XmM), .Ym(YmM), .Zm(ZmM), .Frm(FrmM), .Fmt(FmtM), 
     .FmaASticky(FmaAStickyM), .XZero(XZeroM), .YZero(YZeroM), .XInf(XInfM), .YInf(YInfM), .DivQm(QmM), .FmaSs(SsM),
     .ZInf(ZInfM), .XNaN(XNaNM), .YNaN(YNaNM), .ZNaN(ZNaNM), .XSNaN(XSNaNM), .YSNaN(YSNaNM), .ZSNaN(ZSNaNM), 
     .FmaSm(SmM), .DivQe(QeM), .FmaAs(AsM), .FmaPs(PsM), .OpCtrl(OpCtrlM), .FmaSCnt(SCntM), .FmaSe(SeM),
@@ -334,19 +334,19 @@ module fpu import cvw::*;  #(parameter cvw_t P) (
     .PostProcSel(PostProcSelM), .PostProcRes(PostProcResM), .PostProcFlg(PostProcFlgM), .FCvtIntRes(FCvtIntResM));
 
   // FPU flag selection - to privileged
-  mux2  #(5)       FPUFlgMux({PreNVM&~FResSelM[1], 4'b0}, PostProcFlgM, ~FResSelM[1]&FResSelM[0], SetFflagsM);
-  mux2  #(P.FLEN)  FPUResMux(PreFpResM, PostProcResM, FResSelM[0], FpResM);
+  openhw_mux2  #(5)       FPUFlgMux({PreNVM&~FResSelM[1], 4'b0}, PostProcFlgM, ~FResSelM[1]&FResSelM[0], SetFflagsM);
+  openhw_mux2  #(P.FLEN)  FPUResMux(PreFpResM, PostProcResM, FResSelM[0], FpResM);
 
   // M/W pipe registers
-  flopenrc #(P.FLEN) MWRegFp(clk, reset, FlushW, ~StallW, FpResM, FpResW); 
-  flopenrc #(P.XLEN) MWRegIntCvtRes(clk, reset, FlushW, ~StallW, FCvtIntResM, FCvtIntResW); 
-  flopenrc #(P.XLEN) MWRegIntDivRes(clk, reset, FlushW, ~StallW, FIntDivResultM, FIntDivResultW); 
+  openhw_flopenrc #(P.FLEN) MWRegFp(clk, reset, FlushW, ~StallW, FpResM, FpResW); 
+  openhw_flopenrc #(P.XLEN) MWRegIntCvtRes(clk, reset, FlushW, ~StallW, FCvtIntResM, FCvtIntResW); 
+  openhw_flopenrc #(P.XLEN) MWRegIntDivRes(clk, reset, FlushW, ~StallW, FIntDivResultM, FIntDivResultW); 
 
   //////////////////////////////////////////////////////////////////////////////////////////
   // Writeback Stage: result mux
   //////////////////////////////////////////////////////////////////////////////////////////
 
   // select the result to be written to the FP register
-  mux2  #(P.FLEN)  FResultMux (FpResW, ReadDataW, FResSelW[1], FResultW);
+  openhw_mux2  #(P.FLEN)  FResultMux (FpResW, ReadDataW, FResSelW[1], FResultW);
 
 endmodule // fpu

@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module privdec import cvw::*;  #(parameter cvw_t P) (
+module openhw_privdec import cvw::*;  #(parameter cvw_t P) (
   input  logic         clk, reset,
   input  logic         StallM,
   input  logic [31:15] InstrM,                              // privileged instruction function field

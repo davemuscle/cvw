@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module flopens #(parameter WIDTH = 8) (
+module openhw_flopens #(parameter WIDTH = 8) (
   input  logic             clk, set, en,
   input  logic [WIDTH-1:0] d, 
   output logic [WIDTH-1:0] q);

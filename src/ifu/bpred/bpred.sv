@@ -30,7 +30,7 @@
 `include "BranchPredictorType.vh"
 
 
-module bpred import cvw::*;  #(parameter cvw_t P) (
+module openhw_bpred import cvw::*;  #(parameter cvw_t P) (
   input  logic             clk, reset,
   input  logic             StallF, StallD, StallE, StallM, StallW,
   input  logic             FlushD, FlushE, FlushM, FlushW,
@@ -99,45 +99,45 @@ module bpred import cvw::*;  #(parameter cvw_t P) (
   
   // Part 1 branch direction prediction
   if (P.BPRED_TYPE == `BP_TWOBIT) begin:Predictor
-    twoBitPredictor #(P, P.XLEN, P.BPRED_SIZE) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, 
+    openhw_twoBitPredictor #(P, P.XLEN, P.BPRED_SIZE) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, 
       .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCM, .BPDirPredF, .BPDirPredWrongE,
       .BranchE, .BranchM, .PCSrcE);
 
   end else if (P.BPRED_TYPE == `BP_GSHARE) begin:Predictor
-    gshare #(P, P.XLEN, P.BPRED_SIZE) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
+    openhw_gshare #(P, P.XLEN, P.BPRED_SIZE) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCF, .PCD, .PCE, .PCM, .BPDirPredF, .BPDirPredWrongE,
       .BPBranchF, .BranchD, .BranchE, .BranchM, .BranchW, 
       .PCSrcE);
 
   end else if (P.BPRED_TYPE == `BP_GLOBAL) begin:Predictor
-    gshare #(P, P.XLEN, P.BPRED_SIZE, 0) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
+    openhw_gshare #(P, P.XLEN, P.BPRED_SIZE, 0) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCF, .PCD, .PCE, .PCM, .BPDirPredF, .BPDirPredWrongE,
       .BPBranchF, .BranchD, .BranchE, .BranchM, .BranchW,
       .PCSrcE);
 
   end else if (P.BPRED_TYPE == `BP_GSHARE_BASIC) begin:Predictor
-    gsharebasic #(P, P.XLEN, P.BPRED_SIZE) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
+    openhw_gsharebasic #(P, P.XLEN, P.BPRED_SIZE) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCM, .BPDirPredF, .BPDirPredWrongE,
       .BranchE, .BranchM, .PCSrcE);
 
   end else if (P.BPRED_TYPE == `BP_GLOBAL_BASIC) begin:Predictor
-    gsharebasic #(P, P.XLEN, P.BPRED_SIZE, 0) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
+    openhw_gsharebasic #(P, P.XLEN, P.BPRED_SIZE, 0) DirPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCM, .BPDirPredF, .BPDirPredWrongE,
       .BranchE, .BranchM, .PCSrcE);
   
   end else if (P.BPRED_TYPE == `BP_LOCAL_BASIC) begin:Predictor
-    localbpbasic #(P, P.XLEN, P.BPRED_NUM_LHR, P.BPRED_SIZE) DirPredictor(.clk, .reset, 
+    openhw_localbpbasic #(P, P.XLEN, P.BPRED_NUM_LHR, P.BPRED_SIZE) DirPredictor(.clk, .reset, 
       .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCM, .BPDirPredF, .BPDirPredWrongE,
       .BranchE, .BranchM, .PCSrcE);
   end else if (P.BPRED_TYPE == `BP_LOCAL_AHEAD) begin:Predictor
-    localaheadbp #(P, P.XLEN, P.BPRED_NUM_LHR, P.BPRED_SIZE) DirPredictor(.clk, .reset, 
+    openhw_localaheadbp #(P, P.XLEN, P.BPRED_NUM_LHR, P.BPRED_SIZE) DirPredictor(.clk, .reset, 
       .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCM, .BPDirPredD(BPDirPredF), .BPDirPredWrongE,
       .BranchE, .BranchM, .PCSrcE);
   end else if (P.BPRED_TYPE == `BP_LOCAL_REPAIR) begin:Predictor
-    localrepairbp #(P, P.XLEN, P.BPRED_NUM_LHR, P.BPRED_SIZE) DirPredictor(.clk, .reset, 
+    openhw_localrepairbp #(P, P.XLEN, P.BPRED_NUM_LHR, P.BPRED_SIZE) DirPredictor(.clk, .reset, 
       .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCE, .PCM, .BPDirPredD(BPDirPredF), .BPDirPredWrongE,
       .BranchD, .BranchE, .BranchM, .PCSrcE);
@@ -146,7 +146,7 @@ module bpred import cvw::*;  #(parameter cvw_t P) (
   // Part 2 Branch target address prediction
   // BTB contains target address for all CFI
 
-  btb #(P, P.BTB_SIZE) 
+  openhw_btb #(P, P.BTB_SIZE) 
     TargetPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
       .PCNextF, .PCF, .PCD, .PCE, .PCM,
       .BPBTAF, .BPBTAD, .BPBTAE,
@@ -158,13 +158,13 @@ module bpred import cvw::*;  #(parameter cvw_t P) (
       .InstrClassM({CallM, ReturnM, JumpM, BranchM}),
       .InstrClassW({CallW, ReturnW, JumpW, BranchW}));
 
-  icpred #(P, `INSTR_CLASS_PRED) icpred(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
+  openhw_icpred #(P, `INSTR_CLASS_PRED) icpred(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
     .PostSpillInstrRawF, .InstrD, .BranchD, .BranchE, .JumpD, .JumpE, .BranchM, .BranchW, .JumpM, .JumpW,
     .CallD, .CallE, .CallM, .CallW, .ReturnD, .ReturnE, .ReturnM, .ReturnW, .BTBCallF, .BTBReturnF, .BTBJumpF,
     .BTBBranchF, .BPCallF, .BPReturnF, .BPJumpF, .BPBranchF, .IClassWrongM, .IClassWrongE, .BPReturnWrongD);
 
   // Part 3 RAS
-  RASPredictor #(P) RASPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .FlushD, .FlushE, .FlushM,
+  openhw_RASPredictor #(P) RASPredictor(.clk, .reset, .StallF, .StallD, .StallE, .StallM, .FlushD, .FlushE, .FlushM,
     .BPReturnF, .ReturnD, .ReturnE, .CallE,
     .BPReturnWrongD, .RASPCF, .PCLinkE);
 
@@ -176,21 +176,21 @@ module bpred import cvw::*;  #(parameter cvw_t P) (
   // also flush the branch.  This will change in a superscaler cpu. 
   // branch is wrong only if the PC does not match and both the Decode and Fetch stages have valid instructions.
   assign BPWrongE = (PCCorrectE != PCD) & InstrValidE & InstrValidD;
-  flopenrc #(1) BPWrongMReg(clk, reset, FlushM, ~StallM, BPWrongE, BPWrongM);
+  openhw_flopenrc #(1) BPWrongMReg(clk, reset, FlushM, ~StallM, BPWrongE, BPWrongM);
   
   // Output the predicted PC or corrected PC on miss-predict.
   assign BPPCSrcF = (BPBranchF & BPDirPredF[1]) | BPJumpF;
-  mux2 #(P.XLEN) pcmuxbp(BPBTAF, RASPCF, BPReturnF, BPPCF);
+  openhw_mux2 #(P.XLEN) pcmuxbp(BPBTAF, RASPCF, BPReturnF, BPPCF);
   // Selects the BP or PC+2/4.
-  mux2 #(P.XLEN) pcmux0(PCPlus2or4F, BPPCF, BPPCSrcF, PC0NextF);
+  openhw_mux2 #(P.XLEN) pcmux0(PCPlus2or4F, BPPCF, BPPCSrcF, PC0NextF);
   // If the prediction is wrong select the correct address.
-  mux2 #(P.XLEN) pcmux1(PC0NextF, PCCorrectE, BPWrongE, PC1NextF);  
+  openhw_mux2 #(P.XLEN) pcmux1(PC0NextF, PCCorrectE, BPWrongE, PC1NextF);  
   // Correct branch/jump target.
-  mux2 #(P.XLEN) pccorrectemux(PCLinkE, IEUAdrE, PCSrcE, PCCorrectE);
+  openhw_mux2 #(P.XLEN) pccorrectemux(PCLinkE, IEUAdrE, PCSrcE, PCCorrectE);
   
   // If the fence/csrw was predicted as a taken branch then we select PCF, rather than PCE.
   // Effectively this is PCM+4 or the non-existant PCLinkM
-  if(`INSTR_CLASS_PRED) mux2 #(P.XLEN) pcmuxBPWrongInvalidateFlush(PCE, PCF, BPWrongM, NextValidPCE);
+  if(`INSTR_CLASS_PRED) openhw_mux2 #(P.XLEN) pcmuxBPWrongInvalidateFlush(PCE, PCF, BPWrongM, NextValidPCE);
   else  assign NextValidPCE = PCE;
 
   if(P.ZIHPM_SUPPORTED) begin
@@ -210,9 +210,9 @@ module bpred import cvw::*;  #(parameter cvw_t P) (
     assign BTAWrongE = (BPBTAE != IEUAdrE) & (BranchE | JumpE & ~ReturnE) & PCSrcE;
     assign RASPredPCWrongE = (RASPCE != IEUAdrE) & ReturnE & PCSrcE;
 
-    flopenrc #(P.XLEN) RASTargetDReg(clk, reset, FlushD, ~StallD, RASPCF, RASPCD);
-    flopenrc #(P.XLEN) RASTargetEReg(clk, reset, FlushE, ~StallE, RASPCD, RASPCE);
-    flopenrc #(3) BPPredWrongRegM(clk, reset, FlushM, ~StallM, 
+    openhw_flopenrc #(P.XLEN) RASTargetDReg(clk, reset, FlushD, ~StallD, RASPCF, RASPCD);
+    openhw_flopenrc #(P.XLEN) RASTargetEReg(clk, reset, FlushE, ~StallE, RASPCD, RASPCE);
+    openhw_flopenrc #(3) BPPredWrongRegM(clk, reset, FlushM, ~StallM, 
       {BPDirPredWrongE, BTAWrongE, RASPredPCWrongE},
       {BPDirPredWrongM, BTAWrongM, RASPredPCWrongM});
     
