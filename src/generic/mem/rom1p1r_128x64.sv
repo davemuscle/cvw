@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module rom1p1r_128x64( 
+module rom1p1r_128x64 ( 
   input  logic        CLK, 
   input  logic        CEB, 
   input  logic [6:0]  A, 

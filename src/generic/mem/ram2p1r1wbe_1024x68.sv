@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module ram2p1r1wbe_1024x68( 
+module ram2p1r1wbe_1024x68 ( 
   input  logic          CLKA, 
   input  logic          CLKB, 
   input  logic          CEBA, 

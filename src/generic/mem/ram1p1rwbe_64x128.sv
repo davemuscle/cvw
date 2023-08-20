@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module ram1p1rwbe_64x128( 
+module ram1p1rwbe_64x128 ( 
   input  logic          CLK, 
   input  logic          CEB, 
   input  logic          WEB,
