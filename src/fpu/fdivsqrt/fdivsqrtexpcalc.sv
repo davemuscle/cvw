@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fdivsqrtexpcalc import cvw::*;  #(parameter cvw_t P) (
+module fdivsqrtexpcalc import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.FMTBITS-1:0] Fmt,
   input  logic [P.NE-1:0]      Xe, Ye,
   input  logic                 Sqrt,

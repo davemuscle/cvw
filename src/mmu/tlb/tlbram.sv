@@ -29,7 +29,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-module openhw_tlbram import cvw::*;  #(parameter cvw_t P, 
+module tlbram import cvw::*;  #(parameter cvw_t P, 
                                 parameter TLB_ENTRIES = 8) (
   input  logic                      clk, reset,
   input  logic [P.XLEN-1:0]          PTE,
@@ -43,10 +43,10 @@ module openhw_tlbram import cvw::*;  #(parameter cvw_t P,
   logic [P.PPN_BITS+9:0] PageTableEntry;
 
   // RAM implemented with array of flops and AND/OR read logic
-  openhw_tlbramline #(P.PPN_BITS+10) tlbramline[TLB_ENTRIES-1:0]
+  tlbramline #(P.PPN_BITS+10) tlbramline[TLB_ENTRIES-1:0]
      (.clk, .reset, .re(Matches), .we(WriteEnables), 
       .d(PTE[P.PPN_BITS+9:0]), .q(RamRead), .PTE_G(PTE_Gs));
-  openhw_or_rows #(TLB_ENTRIES, P.PPN_BITS+10) PTEOr(RamRead, PageTableEntry);
+  or_rows #(TLB_ENTRIES, P.PPN_BITS+10) PTEOr(RamRead, PageTableEntry);
 
   // Rename the bits read from the TLB RAM
   assign PTEAccessBits = PageTableEntry[7:0];

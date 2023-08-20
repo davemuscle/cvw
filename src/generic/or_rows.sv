@@ -26,7 +26,7 @@
 
 // perform an OR of all the rows in an array, producing one output for each column
 // equivalent to assign y = a.or
-module openhw_or_rows #(parameter ROWS = 8, COLS=2) (
+module or_rows #(parameter ROWS = 8, COLS=2) (
   input  var logic [COLS-1:0] a[ROWS-1:0],
   output     logic [COLS-1:0] y
   ); 

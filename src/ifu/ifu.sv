@@ -25,7 +25,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
+module ifu import cvw::*;  #(parameter cvw_t P) (
   input  logic                 clk, reset,
   input  logic                 StallF, StallD, StallE, StallM, StallW,
   input  logic                 FlushD, FlushE, FlushM, FlushW, 
@@ -143,7 +143,7 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
   /////////////////////////////////////////////////////////////////////////////////////////////
 
   if(P.C_SUPPORTED) begin : Spill
-    openhw_spill #(P) spill(.clk, .reset, .StallD, .FlushD, .PCF, .PCPlus4F, .PCNextF, .InstrRawF,
+    spill #(P) spill(.clk, .reset, .StallD, .FlushD, .PCF, .PCPlus4F, .PCNextF, .InstrRawF,
       .InstrUpdateDAF, .IFUCacheBusStallF, .ITLBMissF, .PCSpillNextF, .PCSpillF, .SelSpillNextF, .PostSpillInstrRawF, .CompressedF);
   end else begin : NoSpill
     assign PCSpillNextF = PCNextF;
@@ -166,10 +166,10 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
     // the tlbwrite would never take place after the pagetable walk. by adding in ~StallMQ, we are able to drop itlbflush 
     // after a cycle AND pulse it for another cycle on any further back-to-back sfences. 
     logic StallMQ, TLBFlush;
-    openhw_flopr #(1) StallMReg(.clk, .reset, .d(StallM), .q(StallMQ));
+    flopr #(1) StallMReg(.clk, .reset, .d(StallM), .q(StallMQ));
     assign TLBFlush = sfencevmaM & ~StallMQ;
 
-    openhw_mmu #(.P(P), .TLB_ENTRIES(P.ITLB_ENTRIES), .IMMU(1))
+    mmu #(.P(P), .TLB_ENTRIES(P.ITLB_ENTRIES), .IMMU(1))
     immu(.clk, .reset, .SATP_REGW, .STATUS_MXR, .STATUS_SUM, .STATUS_MPRV, .STATUS_MPP,
          .PrivilegeModeW, .DisableTranslation(1'b0),
          .VAdr(PCFExt),
@@ -214,7 +214,7 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
   logic IROMce;
   assign IROMce = ~GatedStallD | reset;
     assign IFURWF = 2'b10;
-    openhw_irom #(P) irom(.clk, .ce(IROMce), .Adr(PCSpillNextF[P.XLEN-1:0]), .IROMInstrF);
+    irom #(P) irom(.clk, .ce(IROMce), .Adr(PCSpillNextF[P.XLEN-1:0]), .IROMInstrF);
   end else begin
     assign IFURWF = 2'b10;
   end
@@ -233,7 +233,7 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
       
       assign BusRW = ~ITLBMissF & ~CacheableF & ~SelIROM ? IFURWF : '0;
       assign CacheRWF = ~ITLBMissF & CacheableF & ~SelIROM ? IFURWF : '0;
-      openhw_cache #(.P(P), .PA_BITS(P.PA_BITS), .XLEN(P.XLEN), .LINELEN(P.ICACHE_LINELENINBITS),
+      cache #(.P(P), .PA_BITS(P.PA_BITS), .XLEN(P.XLEN), .LINELEN(P.ICACHE_LINELENINBITS),
               .NUMLINES(P.ICACHE_WAYSIZEINBYTES*8/P.ICACHE_LINELENINBITS),
               .NUMWAYS(P.ICACHE_NUMWAYS), .LOGBWPL(LOGBWPL), .WORDLEN(32), .MUXINTERVAL(16), .READ_ONLY_CACHE(1))
       icache(.clk, .reset, .FlushStage(FlushD), .IgnoreRequestTLB(1'b0), .Stall(GatedStallD),
@@ -251,7 +251,7 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
              .PAdr(PCPF),
              .CacheCommitted(CacheCommittedF), .InvalidateCache(InvalidateICacheM));
 
-      openhw_ahbcacheinterface #(P.AHBW, P.LLEN, P.PA_BITS, WORDSPERLINE, LOGBWPL, LINELEN, LLENPOVERAHBW, 1) 
+      ahbcacheinterface #(P.AHBW, P.LLEN, P.PA_BITS, WORDSPERLINE, LOGBWPL, LINELEN, LLENPOVERAHBW, 1) 
       ahbcacheinterface(.HCLK(clk), .HRESETn(~reset),
             .HRDATA,
             .Flush(FlushD), .CacheBusRW, .HSIZE(IFUHSIZE), .HBURST(IFUHBURST), .HTRANS(IFUHTRANS), .HWSTRB(),
@@ -262,7 +262,7 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
             .BusRW, .Stall(GatedStallD),
             .BusStall, .BusCommitted(BusCommittedF));
 
-      openhw_mux3 #(32) UnCachedDataMux(.d0(ICacheInstrF), .d1(FetchBuffer[32-1:0]), .d2(IROMInstrF),
+      mux3 #(32) UnCachedDataMux(.d0(ICacheInstrF), .d1(FetchBuffer[32-1:0]), .d2(IROMInstrF),
                                  .s({SelIROM, ~CacheableF}), .y(InstrRawF[31:0]));
     end else begin : passthrough
       assign IFUHADDR = PCPF;
@@ -271,13 +271,13 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
       assign BusRW = ~ITLBMissF & ~SelIROM ? IFURWF : '0;
       assign IFUHSIZE = 3'b010;
 
-      openhw_ahbinterface #(P.XLEN, 0) ahbinterface(.HCLK(clk), .Flush(FlushD), .HRESETn(~reset), .HREADY(IFUHREADY), 
+      ahbinterface #(P.XLEN, 0) ahbinterface(.HCLK(clk), .Flush(FlushD), .HRESETn(~reset), .HREADY(IFUHREADY), 
         .HRDATA(HRDATA), .HTRANS(IFUHTRANS), .HWRITE(IFUHWRITE), .HWDATA(),
         .HWSTRB(), .BusRW, .ByteMask(), .WriteData('0),
         .Stall(GatedStallD), .BusStall, .BusCommitted(BusCommittedF), .FetchBuffer(FetchBuffer));
 
       assign CacheCommittedF = '0;
-      if(P.IROM_SUPPORTED) openhw_mux2 #(32) UnCachedDataMux2(FetchBuffer, IROMInstrF, SelIROM, InstrRawF);
+      if(P.IROM_SUPPORTED) mux2 #(32) UnCachedDataMux2(FetchBuffer, IROMInstrF, SelIROM, InstrRawF);
       else assign InstrRawF = FetchBuffer;
       assign IFUHBURST = 3'b0;
       assign {ICacheMiss, ICacheAccess, ICacheStallF} = '0;
@@ -292,18 +292,18 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
   assign IFUStallF = IFUCacheBusStallF | SelSpillNextF;
   assign GatedStallD = StallD & ~SelSpillNextF;
   
-  openhw_flopenl #(32) AlignedInstrRawDFlop(clk, reset | FlushD, ~StallD, PostSpillInstrRawF, nop, InstrRawD);
+  flopenl #(32) AlignedInstrRawDFlop(clk, reset | FlushD, ~StallD, PostSpillInstrRawF, nop, InstrRawD);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   // PCNextF logic
   ////////////////////////////////////////////////////////////////////////////////////////////////
 
   if(P.ZICSR_SUPPORTED | P.ZIFENCEI_SUPPORTED)
-    openhw_mux2 #(P.XLEN) pcmux2(.d0(PC1NextF), .d1(NextValidPCE), .s(CSRWriteFenceM),.y(PC2NextF));
+    mux2 #(P.XLEN) pcmux2(.d0(PC1NextF), .d1(NextValidPCE), .s(CSRWriteFenceM),.y(PC2NextF));
   else assign PC2NextF = PC1NextF;
 
   assign  PCNextF = {UnalignedPCNextF[P.XLEN-1:1], 1'b0}; // hart-SPEC p. 21 about 16-bit alignment
-  openhw_flopenl #(P.XLEN) pcreg(clk, reset, ~StallF, PCNextF, P.RESET_VECTOR[P.XLEN-1:0], PCF);
+  flopenl #(P.XLEN) pcreg(clk, reset, ~StallF, PCNextF, P.RESET_VECTOR[P.XLEN-1:0], PCF);
 
   // pcadder
   // add 2 or 4 to the PC, based on whether the instruction is 16 bits or 32
@@ -327,7 +327,7 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
   // Branch and Jump Predictor
   ////////////////////////////////////////////////////////////////////////////////////////////////
   if (P.BPRED_SUPPORTED) begin : bpred
-    openhw_bpred #(P) bpred(.clk, .reset,
+    bpred #(P) bpred(.clk, .reset,
                 .StallF, .StallD, .StallE, .StallM, .StallW,
                 .FlushD, .FlushE, .FlushM, .FlushW, .InstrValidD, .InstrValidE, 
                 .BranchD, .BranchE, .JumpD, .JumpE,
@@ -336,7 +336,7 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
                 .BPDirPredWrongM, .BTAWrongM, .RASPredPCWrongM, .IClassWrongM);
 
   end else begin : bpred
-    openhw_mux2 #(P.XLEN) pcmux1(.d0(PCPlus2or4F), .d1(IEUAdrE), .s(PCSrcE), .y(PC1NextF));    
+    mux2 #(P.XLEN) pcmux1(.d0(PCPlus2or4F), .d1(IEUAdrE), .s(PCSrcE), .y(PC1NextF));    
     assign BPWrongE = PCSrcE;
     assign {InstrClassM, BPDirPredWrongM, BTAWrongM, RASPredPCWrongM, IClassWrongM} = '0;
     assign NextValidPCE = PCE;
@@ -347,12 +347,12 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
   ////////////////////////////////////////////////////////////////////////////////////////////////
   
   // Decode stage pipeline register and logic
-  openhw_flopenrc #(P.XLEN) PCDReg(clk, reset, FlushD, ~StallD, PCF, PCD);
+  flopenrc #(P.XLEN) PCDReg(clk, reset, FlushD, ~StallD, PCF, PCD);
    
   // expand 16-bit compressed instructions to 32 bits
   if (P.C_SUPPORTED) begin
     logic IllegalCompInstrD;
-    openhw_decompress #(P.XLEN) decomp(.InstrRawD, .InstrD, .IllegalCompInstrD); 
+    decompress #(P.XLEN) decomp(.InstrRawD, .InstrD, .IllegalCompInstrD); 
     assign IllegalIEUInstrD = IllegalBaseInstrD | IllegalCompInstrD; // illegal if bad 32 or 16-bit instr
   end else begin  
     assign InstrD = InstrRawD;
@@ -371,26 +371,26 @@ module openhw_ifu import cvw::*;  #(parameter cvw_t P) (
   // Spec 3.1.14
   // Traps: Can’t happen.  The bottom two bits of MTVEC are ignored so the trap always is to a multiple of 4.  See 3.1.7 of the privileged spec.
   assign BranchMisalignedFaultE = (IEUAdrE[1] & ~P.C_SUPPORTED) & PCSrcE;
-  openhw_flopenr #(1) InstrMisalignedReg(clk, reset, ~StallM, BranchMisalignedFaultE, InstrMisalignedFaultM);
+  flopenr #(1) InstrMisalignedReg(clk, reset, ~StallM, BranchMisalignedFaultE, InstrMisalignedFaultM);
 
   // Instruction and PC/PCLink pipeline registers
   // Cannot use flopenrc for Instr(E/M) as it resets to NOP not 0.
-  openhw_mux2    #(32)     FlushInstrEMux(InstrD, nop, FlushE, NextInstrD);
-  openhw_mux2    #(32)     FlushInstrMMux(InstrE, nop, FlushM, NextInstrE);
-  openhw_flopenr #(32)     InstrEReg(clk, reset, ~StallE, NextInstrD, InstrE);
-  openhw_flopenr #(32)     InstrMReg(clk, reset, ~StallM, NextInstrE, InstrM);
-  openhw_flopenr #(P.XLEN) PCEReg(clk, reset, ~StallE, PCD, PCE);
-  openhw_flopenr #(P.XLEN) PCMReg(clk, reset, ~StallM, PCE, PCM);
+  mux2    #(32)     FlushInstrEMux(InstrD, nop, FlushE, NextInstrD);
+  mux2    #(32)     FlushInstrMMux(InstrE, nop, FlushM, NextInstrE);
+  flopenr #(32)     InstrEReg(clk, reset, ~StallE, NextInstrD, InstrE);
+  flopenr #(32)     InstrMReg(clk, reset, ~StallM, NextInstrE, InstrM);
+  flopenr #(P.XLEN) PCEReg(clk, reset, ~StallE, PCD, PCE);
+  flopenr #(P.XLEN) PCMReg(clk, reset, ~StallM, PCE, PCM);
   //flopenr #(P.XLEN) PCPDReg(clk, reset, ~StallD, PCPlus2or4F, PCLinkD);
   //flopenr #(P.XLEN) PCPEReg(clk, reset, ~StallE, PCLinkD, PCLinkE);
 
-  openhw_flopenrc #(1) CompressedDReg(clk, reset, FlushD, ~StallD, CompressedF, CompressedD);
-  openhw_flopenrc #(1) CompressedEReg(clk, reset, FlushE, ~StallE, CompressedD, CompressedE);
+  flopenrc #(1) CompressedDReg(clk, reset, FlushD, ~StallD, CompressedF, CompressedD);
+  flopenrc #(1) CompressedEReg(clk, reset, FlushE, ~StallE, CompressedD, CompressedE);
   assign PCLinkE = PCE + (CompressedE ? 2 : 4);
 
   // pipeline original compressed instruction in case it is needed for MTVAL on an illegal instruction exception
-  openhw_flopenrc #(16) InstrRawEReg(clk, reset, FlushE, ~StallE, InstrRawD[15:0], InstrRawE);
-  openhw_flopenrc #(16) InstrRawMReg(clk, reset, FlushM, ~StallM, InstrRawE, InstrRawM);
-  openhw_flopenrc #(1)  CompressedMReg(clk, reset, FlushM, ~StallM, CompressedE, CompressedM);
-  openhw_mux2     #(32) InstrOrigMux(InstrM, {16'b0, InstrRawM}, CompressedM, InstrOrigM); 
+  flopenrc #(16) InstrRawEReg(clk, reset, FlushE, ~StallE, InstrRawD[15:0], InstrRawE);
+  flopenrc #(16) InstrRawMReg(clk, reset, FlushM, ~StallM, InstrRawE, InstrRawM);
+  flopenrc #(1)  CompressedMReg(clk, reset, FlushM, ~StallM, CompressedE, CompressedM);
+  mux2     #(32) InstrOrigMux(InstrM, {16'b0, InstrRawM}, CompressedM, InstrOrigM); 
 endmodule

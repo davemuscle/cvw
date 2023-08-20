@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fdivsqrtpreproc import cvw::*;  #(parameter cvw_t P) (
+module fdivsqrtpreproc import cvw::*;  #(parameter cvw_t P) (
   input  logic                 clk,
   input  logic                 IFDivStartE, 
   input  logic [P.NF:0]        Xm, Ym,
@@ -74,8 +74,8 @@ module openhw_fdivsqrtpreproc import cvw::*;  #(parameter cvw_t P) (
   
     // Source handling
     if (P.XLEN==64) begin // 64-bit, supports W64
-      openhw_mux2 #(64)    amux(ForwardedSrcAE, {{32{ForwardedSrcAE[31] & SignedDivE}}, ForwardedSrcAE[31:0]}, W64E, AE);
-      openhw_mux2 #(64)    bmux(ForwardedSrcBE, {{32{ForwardedSrcBE[31] & SignedDivE}}, ForwardedSrcBE[31:0]}, W64E, BE);
+      mux2 #(64)    amux(ForwardedSrcAE, {{32{ForwardedSrcAE[31] & SignedDivE}}, ForwardedSrcAE[31:0]}, W64E, AE);
+      mux2 #(64)    bmux(ForwardedSrcBE, {{32{ForwardedSrcBE[31] & SignedDivE}}, ForwardedSrcBE[31:0]}, W64E, BE);
     end else begin // 32 bits only
       assign AE = ForwardedSrcAE;
       assign BE = ForwardedSrcBE;
@@ -87,13 +87,13 @@ module openhw_fdivsqrtpreproc import cvw::*;  #(parameter cvw_t P) (
     assign NegQuotE = AsE ^ BsE; // Integer Quotient is negative
 
     // Force integer inputs to be postiive
-    openhw_mux2 #(P.XLEN) posamux(AE, -AE, AsE, PosA);
-    openhw_mux2 #(P.XLEN) posbmux(BE, -BE, BsE, PosB);
+    mux2 #(P.XLEN) posamux(AE, -AE, AsE, PosA);
+    mux2 #(P.XLEN) posbmux(BE, -BE, BsE, PosB);
 
     // Select integer or floating point inputs
-    openhw_mux2 #(P.DIVb) ifxmux({Xm, {(P.DIVb-P.NF-1){1'b0}}}, {PosA, {(P.DIVb-P.XLEN){1'b0}}}, IntDivE, IFX);
-    openhw_mux2 #(P.DIVb) ifdmux({Ym, {(P.DIVb-P.NF-1){1'b0}}}, {PosB, {(P.DIVb-P.XLEN){1'b0}}}, IntDivE, IFD);
-    openhw_mux2 #(1)    numzmux(XZeroE, AZeroE, IntDivE, NumerZeroE);
+    mux2 #(P.DIVb) ifxmux({Xm, {(P.DIVb-P.NF-1){1'b0}}}, {PosA, {(P.DIVb-P.XLEN){1'b0}}}, IntDivE, IFX);
+    mux2 #(P.DIVb) ifdmux({Ym, {(P.DIVb-P.NF-1){1'b0}}}, {PosB, {(P.DIVb-P.XLEN){1'b0}}}, IntDivE, IFD);
+    mux2 #(1)    numzmux(XZeroE, AZeroE, IntDivE, NumerZeroE);
   end else begin // Int not supported
     assign IFX = {Xm, {(P.DIVb-P.NF-1){1'b0}}};
     assign IFD = {Ym, {(P.DIVb-P.NF-1){1'b0}}};
@@ -105,8 +105,8 @@ module openhw_fdivsqrtpreproc import cvw::*;  #(parameter cvw_t P) (
   //////////////////////////////////////////////////////
 
   // count leading zeros for Subnorm FP and to normalize integer inputs
-  openhw_lzc #(P.DIVb) lzcX (IFX, ell);
-  openhw_lzc #(P.DIVb) lzcY (IFD, mE);
+  lzc #(P.DIVb) lzcX (IFX, ell);
+  lzc #(P.DIVb) lzcY (IFD, mE);
 
   // Normalization shift: shift off leading one
   assign Xfract = (IFX << ell) << 1;
@@ -124,7 +124,7 @@ module openhw_fdivsqrtpreproc import cvw::*;  #(parameter cvw_t P) (
     // calculate number of fractional bits p
     assign ZeroDiff = mE - ell;         // Difference in number of leading zeros
     assign ALTBE = ZeroDiff[P.DIVBLEN];  // A less than B (A has more leading zeros)
-    openhw_mux2 #(P.DIVBLEN+1) pmux(ZeroDiff, '0, ALTBE, p);              
+    mux2 #(P.DIVBLEN+1) pmux(ZeroDiff, '0, ALTBE, p);              
 
     // Integer special cases (terminate immediately)
     assign ISpecialCaseE = BZeroE | ALTBE;
@@ -163,43 +163,43 @@ module openhw_fdivsqrtpreproc import cvw::*;  #(parameter cvw_t P) (
   assign DivX = {3'b000, ~NumerZeroE, Xfract};
 
   // Sqrt is initialized on step one as R(X-1), so depends on Radix
-  openhw_mux2 #(P.DIVb+1) sqrtxmux({~XZeroE, Xfract}, {1'b0, ~XZeroE, Xfract[P.DIVb-1:1]}, (Xe[0] ^ ell[0]), PreSqrtX);
+  mux2 #(P.DIVb+1) sqrtxmux({~XZeroE, Xfract}, {1'b0, ~XZeroE, Xfract[P.DIVb-1:1]}, (Xe[0] ^ ell[0]), PreSqrtX);
   if (P.RADIX == 2) assign SqrtX = {3'b111, PreSqrtX};
   else              assign SqrtX = {2'b11, PreSqrtX, 1'b0};
-  openhw_mux2 #(P.DIVb+4) prexmux(DivX, SqrtX, SqrtE, PreShiftX);
+  mux2 #(P.DIVb+4) prexmux(DivX, SqrtX, SqrtE, PreShiftX);
   
   //////////////////////////////////////////////////////
   // Selet integer or floating-point operands
   //////////////////////////////////////////////////////
 
   if (P.IDIV_ON_FPU) begin
-    openhw_mux2 #(P.DIVb+4) xmux(PreShiftX, DivXShifted, IntDivE, X);
+    mux2 #(P.DIVb+4) xmux(PreShiftX, DivXShifted, IntDivE, X);
   end else begin
     assign X = PreShiftX;
   end
 
    // Divisior register
-  openhw_flopen #(P.DIVb+4) dreg(clk, IFDivStartE, {4'b0001, Dfract}, D);
+  flopen #(P.DIVb+4) dreg(clk, IFDivStartE, {4'b0001, Dfract}, D);
  
   // Floating-point exponent
-  openhw_fdivsqrtexpcalc #(P) expcalc(.Fmt(FmtE), .Xe, .Ye, .Sqrt(SqrtE), .XZero(XZeroE), .ell, .m(mE), .Qe(QeE));
-  openhw_flopen #(P.NE+2) expreg(clk, IFDivStartE, QeE, QeM);
+  fdivsqrtexpcalc #(P) expcalc(.Fmt(FmtE), .Xe, .Ye, .Sqrt(SqrtE), .XZero(XZeroE), .ell, .m(mE), .Qe(QeE));
+  flopen #(P.NE+2) expreg(clk, IFDivStartE, QeE, QeM);
 
   // Number of FSM cycles (to FSM)
-  openhw_fdivsqrtcycles #(P) cyclecalc(.FmtE, .SqrtE, .IntDivE, .nE, .CyclesE);
+  fdivsqrtcycles #(P) cyclecalc(.FmtE, .SqrtE, .IntDivE, .nE, .CyclesE);
 
   if (P.IDIV_ON_FPU) begin:intpipelineregs
     // pipeline registers
-    openhw_flopen #(1)        mdureg(clk, IFDivStartE, IntDivE,  IntDivM);
-    openhw_flopen #(1)       altbreg(clk, IFDivStartE, ALTBE,    ALTBM);
-    openhw_flopen #(1)    negquotreg(clk, IFDivStartE, NegQuotE, NegQuotM);
-    openhw_flopen #(1)      bzeroreg(clk, IFDivStartE, BZeroE,   BZeroM);
-    openhw_flopen #(1)      asignreg(clk, IFDivStartE, AsE,      AsM);
-    openhw_flopen #(P.DIVBLEN+1) nreg(clk, IFDivStartE, nE,       nM); 
-    openhw_flopen #(P.DIVBLEN+1) mreg(clk, IFDivStartE, mE,       mM);
-    openhw_flopen #(P.XLEN)   srcareg(clk, IFDivStartE, AE,       AM);
+    flopen #(1)        mdureg(clk, IFDivStartE, IntDivE,  IntDivM);
+    flopen #(1)       altbreg(clk, IFDivStartE, ALTBE,    ALTBM);
+    flopen #(1)    negquotreg(clk, IFDivStartE, NegQuotE, NegQuotM);
+    flopen #(1)      bzeroreg(clk, IFDivStartE, BZeroE,   BZeroM);
+    flopen #(1)      asignreg(clk, IFDivStartE, AsE,      AsM);
+    flopen #(P.DIVBLEN+1) nreg(clk, IFDivStartE, nE,       nM); 
+    flopen #(P.DIVBLEN+1) mreg(clk, IFDivStartE, mE,       mM);
+    flopen #(P.XLEN)   srcareg(clk, IFDivStartE, AE,       AM);
     if (P.XLEN==64) 
-      openhw_flopen #(1)      w64reg(clk, IFDivStartE, W64E,     W64M);
+      flopen #(1)      w64reg(clk, IFDivStartE, W64E,     W64M);
   end
 
 endmodule

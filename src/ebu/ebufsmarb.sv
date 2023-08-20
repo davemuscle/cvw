@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_ebufsmarb (
+module ebufsmarb (
   input  logic       HCLK,
   input  logic       HRESETn,
   input  logic [2:0] HBURST,
@@ -64,7 +64,7 @@ module openhw_ebufsmarb (
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   assign both = LSUReq & IFUReq;
-  openhw_flopenl #(.TYPE(statetype)) busreg(HCLK, ~HRESETn, 1'b1, NextState, IDLE, CurrState);
+  flopenl #(.TYPE(statetype)) busreg(HCLK, ~HRESETn, 1'b1, NextState, IDLE, CurrState);
   always_comb 
     case (CurrState) 
       IDLE:      if (both)                                      NextState = ARBITRATE; 
@@ -87,7 +87,7 @@ module openhw_ebufsmarb (
   // priority and re-issuing the same memory operation, the delayed IFUReqD squashes the LSU request.
   // This is necessary because the pipeline is stalled for the entire duration of both transactions,
   // and the LSU memory request will stil be active.
-  openhw_flopr #(1) ifureqreg(HCLK, ~HRESETn, IFUReq, IFUReqD);
+  flopr #(1) ifureqreg(HCLK, ~HRESETn, IFUReq, IFUReqD);
   assign LSUDisable = (CurrState == ARBITRATE) ? 1'b0 : (IFUReqD & ~(HREADY & FinalBeatD));
   assign LSUSelect = (NextState == ARBITRATE) ? 1'b1: LSUReq;
 
@@ -103,10 +103,10 @@ module openhw_ebufsmarb (
   // differentiate them.  The EBU counts the HREADY beats so it knows when to switch to the IFU's 
   // request.
   assign BeatCntEn = (NextState == ARBITRATE) & HREADY; 
-  openhw_counter #(4) BeatCounter(HCLK, ~HRESETn | BeatCntReset | FinalBeat, BeatCntEn, BeatCount);  
+  counter #(4) BeatCounter(HCLK, ~HRESETn | BeatCntReset | FinalBeat, BeatCntEn, BeatCount);  
  
   // Used to store data from data phase of AHB.
-  openhw_flopenr #(1) FinalBeatReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, FinalBeat, FinalBeatD);
+  flopenr #(1) FinalBeatReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, FinalBeat, FinalBeatD);
 
   // unlike the bus fsm in lsu/ifu, we need to derive the number of beats from HBURST, Threshold = num beats - 1.
   //  HBURST[2:1] Beats  threshold

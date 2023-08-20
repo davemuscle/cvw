@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_wallypipelinedsoc import cvw::*; #(parameter cvw_t P)  (
+module wallypipelinedsoc import cvw::*; #(parameter cvw_t P)  (
   input  logic                clk, 
   input  logic                reset_ext,        // external asynchronous reset pin
   output logic                reset,            // reset synchronized to clk to prevent races on release
@@ -65,10 +65,10 @@ module openhw_wallypipelinedsoc import cvw::*; #(parameter cvw_t P)  (
   logic                       MExtInt,SExtInt;  // from PLIC
 
   // synchronize reset to SOC clock domain
-  openhw_synchronizer resetsync(.clk, .d(reset_ext), .q(reset)); 
+  synchronizer resetsync(.clk, .d(reset_ext), .q(reset)); 
    
   // instantiate processor and internal memories
-  openhw_wallypipelinedcore #(P) core(.clk, .reset,
+  wallypipelinedcore #(P) core(.clk, .reset,
     .MTimerInt, .MExtInt, .SExtInt, .MSwInt, .MTIME_CLINT,
     .HRDATA, .HREADY, .HRESP, .HCLK, .HRESETn, .HADDR, .HWDATA, .HWSTRB,
     .HWRITE, .HSIZE, .HBURST, .HPROT, .HTRANS, .HMASTLOCK
@@ -76,7 +76,7 @@ module openhw_wallypipelinedsoc import cvw::*; #(parameter cvw_t P)  (
 
   // instantiate uncore if a bus interface exists
   if (P.BUS_SUPPORTED) begin : uncore
-    openhw_uncore #(P) uncore(.HCLK, .HRESETn, .TIMECLK,
+    uncore #(P) uncore(.HCLK, .HRESETn, .TIMECLK,
       .HADDR, .HWDATA, .HWSTRB, .HWRITE, .HSIZE, .HBURST, .HPROT, .HTRANS, .HMASTLOCK, .HRDATAEXT,
       .HREADYEXT, .HRESPEXT, .HRDATA, .HREADY, .HRESP, .HSELEXT, .HSELEXTSDC,
       .MTimerInt, .MSwInt, .MExtInt, .SExtInt, .GPIOIN, .GPIOOUT, .GPIOEN, .UARTSin, 

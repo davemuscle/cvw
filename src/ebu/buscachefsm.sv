@@ -30,7 +30,7 @@
 `define BURST_EN 1         // Enables burst mode.  Disable to show the lost performance.
 
 // HCLK and clk must be the same clock!
-module openhw_buscachefsm #(
+module buscachefsm #(
   parameter BeatCountThreshold,                      // Largest beat index
   parameter AHBWLOGBWPL,                             // Log2 of BEATSPERLINE
   parameter READ_ONLY_CACHE
@@ -104,8 +104,8 @@ module openhw_buscachefsm #(
 
   // IEU, LSU, and IFU controls
   // Used to store data from data phase of AHB.
-  openhw_flopenr #(AHBWLOGBWPL) BeatCountReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, NextBeatCount, BeatCount);  
-  openhw_flopenr #(AHBWLOGBWPL) BeatCountDelayedReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, BeatCount, BeatCountDelayed);
+  flopenr #(AHBWLOGBWPL) BeatCountReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, NextBeatCount, BeatCount);  
+  flopenr #(AHBWLOGBWPL) BeatCountDelayedReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, BeatCount, BeatCountDelayed);
   assign NextBeatCount = BeatCount + 1'b1;
 
   assign FinalBeatCount = BeatCountDelayed == BeatCountThreshold[AHBWLOGBWPL-1:0];

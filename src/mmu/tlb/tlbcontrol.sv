@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_tlbcontrol import cvw::*;  #(parameter cvw_t P, ITLB = 0) (
+module tlbcontrol import cvw::*;  #(parameter cvw_t P, ITLB = 0) (
   input  logic [P.SVMODE_BITS-1:0] SATP_MODE,
   input  logic [P.XLEN-1:0]        VAdr,
   input  logic                    STATUS_MXR, STATUS_SUM, STATUS_MPRV,
@@ -62,7 +62,7 @@ module openhw_tlbcontrol import cvw::*;  #(parameter cvw_t P, ITLB = 0) (
   assign TLBAccess = ReadAccess | WriteAccess;
 
   // Check that upper bits are legal (all 0s or all 1s)
-  openhw_vm64check #(P) vm64check(.SATP_MODE, .VAdr, .SV39Mode, .UpperBitsUnequal);
+  vm64check #(P) vm64check(.SATP_MODE, .VAdr, .SV39Mode, .UpperBitsUnequal);
 
   // unswizzle useful PTE bits
   assign {PTE_D, PTE_A} = PTEAccessBits[7:6];

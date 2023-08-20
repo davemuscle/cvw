@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_ext #(parameter WIDTH = 32) (
+module ext #(parameter WIDTH = 32) (
   input  logic [WIDTH-1:0] A,            // Operands
   input  logic [1:0]       ExtSelect,    // B[2], B[0] of immediate
   output logic [WIDTH-1:0] ExtResult);   // Extend Result
@@ -39,5 +39,5 @@ module openhw_ext #(parameter WIDTH = 32) (
   assign zexthResult = {{(WIDTH-16){1'b0}},A[15:0]};
   assign sextbResult = {{(WIDTH-8){A[7]}},A[7:0]};
 
-  openhw_mux3 #(WIDTH) extmux(sextbResult, sexthResult, zexthResult, ExtSelect, ExtResult);
+  mux3 #(WIDTH) extmux(sextbResult, sexthResult, zexthResult, ExtSelect, ExtResult);
 endmodule

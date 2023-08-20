@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_regfile #(parameter XLEN, E_SUPPORTED) (
+module regfile #(parameter XLEN, E_SUPPORTED) (
   input  logic             clk, reset,
   input  logic             we3,                 // Write enable
   input  logic [4:0]       a1, a2, a3,          // Source registers to read (a1, a2), destination register to write (a3)

@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fdivsqrtiter import cvw::*;  #(parameter cvw_t P) (
+module fdivsqrtiter import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk,
   input  logic              IFDivStartE, 
   input  logic              FDivBusyE, 
@@ -64,32 +64,32 @@ module openhw_fdivsqrtiter import cvw::*;  #(parameter cvw_t P) (
   // are fed back for the next iteration.
  
   // Residual WS/SC registers/initialization mux
-  openhw_mux2   #(P.DIVb+4) wsmux(WS[P.DIVCOPIES], X, IFDivStartE, WSN);
-  openhw_mux2   #(P.DIVb+4) wcmux(WC[P.DIVCOPIES], '0, IFDivStartE, WCN);
-  openhw_flopen #(P.DIVb+4) wsreg(clk, FDivBusyE, WSN, WS[0]);
-  openhw_flopen #(P.DIVb+4) wcreg(clk, FDivBusyE, WCN, WC[0]);
+  mux2   #(P.DIVb+4) wsmux(WS[P.DIVCOPIES], X, IFDivStartE, WSN);
+  mux2   #(P.DIVb+4) wcmux(WC[P.DIVCOPIES], '0, IFDivStartE, WCN);
+  flopen #(P.DIVb+4) wsreg(clk, FDivBusyE, WSN, WS[0]);
+  flopen #(P.DIVb+4) wcreg(clk, FDivBusyE, WCN, WC[0]);
 
   // UOTFC Result U and UM registers/initialization mux
   // Initialize U to 1.0 and UM to 0 for square root; U to 0 and UM to -1 otherwise
   assign initU  = {SqrtE, {(P.DIVb){1'b0}}};
   assign initUM = {~SqrtE, {(P.DIVb){1'b0}}};
-  openhw_mux2   #(P.DIVb+1)  Umux(UNext[P.DIVCOPIES-1],  initU,  IFDivStartE, UMux);
-  openhw_mux2   #(P.DIVb+1) UMmux(UMNext[P.DIVCOPIES-1], initUM, IFDivStartE, UMMux);
-  openhw_flopen #(P.DIVb+1)  UReg(clk, FDivBusyE, UMux,  U[0]);
-  openhw_flopen #(P.DIVb+1) UMReg(clk, FDivBusyE, UMMux, UM[0]);
+  mux2   #(P.DIVb+1)  Umux(UNext[P.DIVCOPIES-1],  initU,  IFDivStartE, UMux);
+  mux2   #(P.DIVb+1) UMmux(UMNext[P.DIVCOPIES-1], initUM, IFDivStartE, UMMux);
+  flopen #(P.DIVb+1)  UReg(clk, FDivBusyE, UMux,  U[0]);
+  flopen #(P.DIVb+1) UMReg(clk, FDivBusyE, UMMux, UM[0]);
 
   // C register/initialization mux
   // Initialize C to -1 for sqrt and -R for division
   logic [1:0] initCUpper;
   if(P.RADIX == 4) begin
-    openhw_mux2 #(2) cuppermux4(2'b00, 2'b11, SqrtE, initCUpper);
+    mux2 #(2) cuppermux4(2'b00, 2'b11, SqrtE, initCUpper);
   end else begin
-    openhw_mux2 #(2) cuppermux2(2'b10, 2'b11, SqrtE, initCUpper);
+    mux2 #(2) cuppermux2(2'b10, 2'b11, SqrtE, initCUpper);
   end
   
   assign initC = {initCUpper, {P.DIVb{1'b0}}};
-  openhw_mux2   #(P.DIVb+2) cmux(C[P.DIVCOPIES], initC, IFDivStartE, NextC); 
-  openhw_flopen #(P.DIVb+2) creg(clk, FDivBusyE, NextC, C[0]);
+  mux2   #(P.DIVb+2) cmux(C[P.DIVCOPIES], initC, IFDivStartE, NextC); 
+  flopen #(P.DIVb+2) creg(clk, FDivBusyE, NextC, C[0]);
 
   // Divisor Selections
   assign DBar    = ~D;        // for -D
@@ -103,13 +103,13 @@ module openhw_fdivsqrtiter import cvw::*;  #(parameter cvw_t P) (
   generate
     for(i=0; $unsigned(i)<P.DIVCOPIES; i++) begin : iterations
       if (P.RADIX == 2) begin: stage
-        openhw_fdivsqrtstage2 #(P) fdivsqrtstage(.D, .DBar, .SqrtE,
+        fdivsqrtstage2 #(P) fdivsqrtstage(.D, .DBar, .SqrtE,
         .WS(WS[i]), .WC(WC[i]), .WSNext(WSNext[i]), .WCNext(WCNext[i]),
         .C(C[i]), .U(U[i]), .UM(UM[i]), .CNext(C[i+1]), .UNext(UNext[i]), .UMNext(UMNext[i]), .un(un[i]));
       end else begin: stage
         logic j1;
         assign j1 = (i == 0 & ~C[0][P.DIVb-1]);
-        openhw_fdivsqrtstage4 #(P) fdivsqrtstage(.D, .DBar, .D2, .DBar2, .SqrtE, .j1,
+        fdivsqrtstage4 #(P) fdivsqrtstage(.D, .DBar, .D2, .DBar2, .SqrtE, .j1,
         .WS(WS[i]), .WC(WC[i]), .WSNext(WSNext[i]), .WCNext(WCNext[i]), 
         .C(C[i]), .U(U[i]), .UM(UM[i]), .CNext(C[i+1]), .UNext(UNext[i]), .UMNext(UMNext[i]), .un(un[i]));
       end

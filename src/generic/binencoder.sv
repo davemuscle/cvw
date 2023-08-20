@@ -22,7 +22,7 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ///////////////////////////////////////////
 
-module openhw_binencoder #(parameter N = 8) (
+module binencoder #(parameter N = 8) (
   input  logic [N-1:0]         A,   // one-hot input
   output logic [$clog2(N)-1:0] Y    // binary-encoded output
 );

@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fsgninj import cvw::*;  #(parameter cvw_t P) (
+module fsgninj import cvw::*;  #(parameter cvw_t P) (
   input  logic                 Xs, Ys, // X and Y sign bits
   input  logic [P.FLEN-1:0]    X,      // X
   input  logic [P.FMTBITS-1:0] Fmt,    // format

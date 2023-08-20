@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_uart_apb import cvw::*; #(parameter cvw_t P) (
+module uart_apb import cvw::*; #(parameter cvw_t P) (
   input  logic                PCLK, PRESETn,
   input  logic                PSEL,
   input  logic [2:0]          PADDR, 
@@ -81,7 +81,7 @@ module openhw_uart_apb import cvw::*; #(parameter cvw_t P) (
   end
   
   logic BAUDOUTb;  // loop tx clock BAUDOUTb back to rx clock RCLK
-  openhw_uartPC16550D #(P.UART_PRESCALE) u(  
+  uartPC16550D #(P.UART_PRESCALE) u(  
     // Processor Interface
     .PCLK, .PRESETn,
     .A(entry), .Din, 

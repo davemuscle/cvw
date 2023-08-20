@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_trap import cvw::*;  #(parameter cvw_t P) (
+module trap import cvw::*;  #(parameter cvw_t P) (
   input  logic                 reset, 
   input  logic                 InstrMisalignedFaultM, InstrAccessFaultM, HPTWInstrAccessFaultM, IllegalInstrFaultM,
   input  logic                 BreakpointFaultM, LoadMisalignedFaultM, StoreAmoMisalignedFaultM,

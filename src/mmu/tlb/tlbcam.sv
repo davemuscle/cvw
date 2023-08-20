@@ -29,7 +29,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_tlbcam  import cvw::*;  #(parameter cvw_t P,
+module tlbcam  import cvw::*;  #(parameter cvw_t P,
                                  parameter TLB_ENTRIES = 8, KEY_BITS = 20, SEGMENT_BITS = 10) (
   input  logic                    clk, reset,
   input  logic [P.VPN_BITS-1:0]    VPN,
@@ -52,10 +52,10 @@ module openhw_tlbcam  import cvw::*;  #(parameter cvw_t P,
   // of page type. However, matches are determined based on a subset of the
   // page number segments.
 
-  openhw_tlbcamline #(P, KEY_BITS, SEGMENT_BITS) camlines[TLB_ENTRIES-1:0](
+  tlbcamline #(P, KEY_BITS, SEGMENT_BITS) camlines[TLB_ENTRIES-1:0](
     .clk, .reset, .VPN, .SATP_ASID, .SV39Mode, .PTE_G(PTE_Gs), .PageTypeWriteVal, .TLBFlush,
     .WriteEnable(WriteEnables), .PageTypeRead, .Match(Matches));
   assign CAMHit = |Matches & ~TLBFlush;
-  openhw_or_rows #(TLB_ENTRIES,2) PageTypeOr(PageTypeRead, HitPageType);
+  or_rows #(TLB_ENTRIES,2) PageTypeOr(PageTypeRead, HitPageType);
 endmodule
 

@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_flopr #(parameter WIDTH = 8) ( 
+module flopr #(parameter WIDTH = 8) ( 
   input  logic             clk, reset,
   input  logic [WIDTH-1:0] d, 
   output logic [WIDTH-1:0] q);

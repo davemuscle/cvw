@@ -27,7 +27,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////
 
-module openhw_privileged import cvw::*;  #(parameter cvw_t P) (
+module privileged import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset,
   input  logic              StallD, StallE, StallM, StallW,
   input  logic              FlushD, FlushE, FlushM, FlushW, 
@@ -114,17 +114,17 @@ module openhw_privileged import cvw::*;  #(parameter cvw_t P) (
   logic                     HPTWInstrAccessFaultM;                          // Hardware page table access fault while fetching instruction PTE
   
   // track the current privilege level
-  openhw_privmode #(P) privmode(.clk, .reset, .StallW, .TrapM, .mretM, .sretM, .DelegateM,
+  privmode #(P) privmode(.clk, .reset, .StallW, .TrapM, .mretM, .sretM, .DelegateM,
     .STATUS_MPP, .STATUS_SPP, .NextPrivilegeModeM, .PrivilegeModeW);
 
   // decode privileged instructions
-  openhw_privdec #(P) pmd(.clk, .reset, .StallM, .InstrM(InstrM[31:15]), 
+  privdec #(P) pmd(.clk, .reset, .StallM, .InstrM(InstrM[31:15]), 
     .PrivilegedM, .IllegalIEUFPUInstrM, .IllegalCSRAccessM, 
     .PrivilegeModeW, .STATUS_TSR, .STATUS_TVM, .STATUS_TW, .IllegalInstrFaultM, 
     .EcallFaultM, .BreakpointFaultM, .sretM, .mretM, .wfiM, .sfencevmaM);
 
   // Control and Status Registers
-  openhw_csr #(P) csr(.clk, .reset, .FlushM, .FlushW, .StallE, .StallM, .StallW,
+  csr #(P) csr(.clk, .reset, .FlushM, .FlushW, .StallE, .StallM, .StallW,
     .InstrM, .InstrOrigM, .PCM, .SrcAM, .IEUAdrM, .PC2NextF,
     .CSRReadM, .CSRWriteM, .TrapM, .mretM, .sretM, .wfiM, .IntPendingM, .InterruptM,
     .MTimerInt, .MExtInt, .SExtInt, .MSwInt,
@@ -141,12 +141,12 @@ module openhw_privileged import cvw::*;  #(parameter cvw_t P) (
     .CSRReadValW,.UnalignedPCNextF, .IllegalCSRAccessM, .BigEndianM);
 
   // pipeline early-arriving trap sources
-  openhw_privpiperegs ppr(.clk, .reset, .StallD, .StallE, .StallM, .FlushD, .FlushE, .FlushM,
+  privpiperegs ppr(.clk, .reset, .StallD, .StallE, .StallM, .FlushD, .FlushE, .FlushM,
     .InstrPageFaultF, .InstrAccessFaultF, .HPTWInstrAccessFaultF, .IllegalIEUFPUInstrD, 
     .InstrPageFaultM, .InstrAccessFaultM, .HPTWInstrAccessFaultM, .IllegalIEUFPUInstrM);
 
   // trap logic
-  openhw_trap #(P) trap(.reset,
+  trap #(P) trap(.reset,
     .InstrMisalignedFaultM, .InstrAccessFaultM, .HPTWInstrAccessFaultM, .IllegalInstrFaultM,
     .BreakpointFaultM, .LoadMisalignedFaultM, .StoreAmoMisalignedFaultM,
     .LoadAccessFaultM, .StoreAmoAccessFaultM, .EcallFaultM, .InstrPageFaultM,

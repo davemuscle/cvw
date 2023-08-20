@@ -33,7 +33,7 @@
 //    001   less than
 //    011   less than or equal
 
-module openhw_fcmp import cvw::*;  #(parameter cvw_t P) (
+module fcmp import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.FMTBITS-1:0]   Fmt,           // format of fp number
   input  logic [2:0]             OpCtrl,        // see above table
   input  logic                   Xs, Ys,        // input signs

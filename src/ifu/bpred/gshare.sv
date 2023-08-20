@@ -28,7 +28,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-module openhw_gshare import cvw::*; #(parameter cvw_t P,
+module gshare import cvw::*; #(parameter cvw_t P,
                                parameter XLEN, 
                 parameter k = 10,
                 parameter integer TYPE = 1) (
@@ -69,7 +69,7 @@ module openhw_gshare import cvw::*; #(parameter cvw_t P,
   assign IndexM = GHRM;
   end
 
-  openhw_flopenrc #(k) IndexWReg(clk, reset, FlushW, ~StallW, IndexM, IndexW);
+  flopenrc #(k) IndexWReg(clk, reset, FlushW, ~StallW, IndexM, IndexW);
 
   assign MatchD = BranchD & ~FlushE & (IndexF == IndexD);
   assign MatchE = BranchE & ~FlushM & (IndexF == IndexE);
@@ -84,7 +84,7 @@ module openhw_gshare import cvw::*; #(parameter cvw_t P,
   
   assign BPDirPredF = MatchX ? FwdNewDirPredF : TableBPDirPredF;
 
-  openhw_ram2p1r1wbe #(P, 2**k, 2) PHT(.clk(clk),
+  ram2p1r1wbe #(P, 2**k, 2) PHT(.clk(clk),
     .ce1(~StallF), .ce2(~StallW & ~FlushW),
     .ra1(IndexNextF),
     .rd1(TableBPDirPredF),
@@ -93,12 +93,12 @@ module openhw_gshare import cvw::*; #(parameter cvw_t P,
     .we2(BranchM),
     .bwe2(1'b1));
 
-  openhw_flopenrc #(2) PredictionRegD(clk, reset,  FlushD, ~StallD, BPDirPredF, BPDirPredD);
-  openhw_flopenrc #(2) PredictionRegE(clk, reset,  FlushE, ~StallE, BPDirPredD, BPDirPredE);
+  flopenrc #(2) PredictionRegD(clk, reset,  FlushD, ~StallD, BPDirPredF, BPDirPredD);
+  flopenrc #(2) PredictionRegE(clk, reset,  FlushE, ~StallE, BPDirPredD, BPDirPredE);
 
-  openhw_satCounter2 BPDirUpdateE(.BrDir(PCSrcE), .OldState(BPDirPredE), .NewState(NewBPDirPredE));
-  openhw_flopenrc #(2) NewPredictionRegM(clk, reset,  FlushM, ~StallM, NewBPDirPredE, NewBPDirPredM);
-  openhw_flopenrc #(2) NewPredictionRegW(clk, reset,  FlushW, ~StallW, NewBPDirPredM, NewBPDirPredW);
+  satCounter2 BPDirUpdateE(.BrDir(PCSrcE), .OldState(BPDirPredE), .NewState(NewBPDirPredE));
+  flopenrc #(2) NewPredictionRegM(clk, reset,  FlushM, ~StallM, NewBPDirPredE, NewBPDirPredM);
+  flopenrc #(2) NewPredictionRegW(clk, reset,  FlushW, ~StallW, NewBPDirPredM, NewBPDirPredW);
 
   assign BPDirPredWrongE = PCSrcE != BPDirPredE[1] & BranchE;
 
@@ -109,7 +109,7 @@ module openhw_gshare import cvw::*; #(parameter cvw_t P,
 
   assign GHRNextM = {PCSrcM, GHRM[k-1:1]};
 
-  openhw_flopenr #(k) GHRReg(clk, reset, ~StallW & ~FlushW & BranchM, GHRNextM, GHRM);
-  openhw_flopenrc #(1) PCSrcMReg(clk, reset, FlushM, ~StallM, PCSrcE, PCSrcM);
+  flopenr #(k) GHRReg(clk, reset, ~StallW & ~FlushW & BranchM, GHRNextM, GHRM);
+  flopenrc #(1) PCSrcMReg(clk, reset, FlushM, ~StallM, PCSrcE, PCSrcM);
     
 endmodule

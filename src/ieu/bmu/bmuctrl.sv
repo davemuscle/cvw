@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_bmuctrl import cvw::*;  #(parameter cvw_t P) (
+module bmuctrl import cvw::*;  #(parameter cvw_t P) (
   input  logic        clk, reset,
   // Decode stage control signals
   input  logic        StallD, FlushD,          // Stall, flush Decode stage
@@ -175,5 +175,5 @@ module openhw_bmuctrl import cvw::*;  #(parameter cvw_t P) (
   assign ALUSelectD = BALUOpD ? BALUSelectD : (ALUOpD ? Funct3D : 3'b000);
 
   // BMU Execute stage pipieline control register
-  openhw_flopenrc #(10) controlregBMU(clk, reset, FlushE, ~StallE, {BSelectD, ZBBSelectD, BRegWriteD, BALUControlD, ~IllegalBitmanipInstrD}, {BSelectE, ZBBSelectE, BRegWriteE, BALUControlE, BMUActiveE});
+  flopenrc #(10) controlregBMU(clk, reset, FlushE, ~StallE, {BSelectD, ZBBSelectD, BRegWriteD, BALUControlD, ~IllegalBitmanipInstrD}, {BSelectE, ZBBSelectE, BRegWriteE, BALUControlE, BMUActiveE});
 endmodule

@@ -25,7 +25,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_ahbapbbridge import cvw::*;  #(parameter cvw_t P, 
+module ahbapbbridge import cvw::*;  #(parameter cvw_t P, 
                                       parameter PERIPHS = 2) (
   input  logic                 HCLK, HRESETn,
   input  logic [PERIPHS-1:0]   HSEL,  
@@ -64,9 +64,9 @@ module openhw_ahbapbbridge import cvw::*;  #(parameter cvw_t P,
   assign initTransSel = initTrans & |HSEL; // capture data and address if any of the peripherals are selected
 
   // delay AHB Address phase signals to align with AHB Data phase because APB expects them at the same time
-  openhw_flopen  #(32) addrreg(HCLK, HREADY, HADDR[31:0], PADDR);
-  openhw_flopenr #(1) writereg(HCLK, ~HRESETn, HREADY, HWRITE, PWRITE); 
-  openhw_flopenr #(PERIPHS) selreg(HCLK, ~HRESETn, HREADY, HSEL & {PERIPHS{initTrans}}, PSEL); 
+  flopen  #(32) addrreg(HCLK, HREADY, HADDR[31:0], PADDR);
+  flopenr #(1) writereg(HCLK, ~HRESETn, HREADY, HWRITE, PWRITE); 
+  flopenr #(PERIPHS) selreg(HCLK, ~HRESETn, HREADY, HSEL & {PERIPHS{initTrans}}, PSEL); 
   // PPROT[2:0] = {Data/InstrB, Secure, Privileged};
   // assign PPROT = {~HPROT[0], 1'b0, HPROT[1]};  // protection not presently used
   // assign PWAKEUP = 1'b1; // not used
@@ -80,9 +80,9 @@ module openhw_ahbapbbridge import cvw::*;  #(parameter cvw_t P,
   // cycle2: AHB puts HWDATA on the bus.  This effectively extends the setup phase
   // cycle3: bridge raises PENABLE.  Peripheral typically responds with PREADY.  
   //         Read occurs by end of cycle.  Write occurs at end of cycle.
-  openhw_flopr #(1) inittransreg(HCLK, ~HRESETn, initTransSel, initTransSelD);
+  flopr #(1) inittransreg(HCLK, ~HRESETn, initTransSel, initTransSelD);
   assign nextPENABLE = PENABLE ? ~HREADY : initTransSelD; 
-  openhw_flopr #(1) enablereg(HCLK, ~HRESETn, nextPENABLE, PENABLE);
+  flopr #(1) enablereg(HCLK, ~HRESETn, nextPENABLE, PENABLE);
 
   // result and ready multiplexer 
   int i;

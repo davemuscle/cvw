@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_counter #(parameter WIDTH=8) (
+module counter #(parameter WIDTH=8) (
   input  logic             clk, reset, en,
   output logic [WIDTH-1:0] q
 );
@@ -32,5 +32,5 @@ module openhw_counter #(parameter WIDTH=8) (
   logic [WIDTH-1:0] qnext;
 
   assign qnext = q + 1;
-  openhw_flopenr #(WIDTH) cntrflop(clk, reset, en, qnext, q);
+  flopenr #(WIDTH) cntrflop(clk, reset, en, qnext, q);
 endmodule 

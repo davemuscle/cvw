@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_gsharebasic import cvw::*; #(parameter cvw_t P,
+module gsharebasic import cvw::*; #(parameter cvw_t P,
                      parameter XLEN,
                      parameter k = 10,
                      parameter TYPE = 1) (
@@ -58,7 +58,7 @@ module openhw_gsharebasic import cvw::*; #(parameter cvw_t P,
   assign IndexM = GHRM;
   end
   
-  openhw_ram2p1r1wbe #(P, 2**k, 2) PHT(.clk(clk),
+  ram2p1r1wbe #(P, 2**k, 2) PHT(.clk(clk),
     .ce1(~StallF), .ce2(~StallW & ~FlushW),
     .ra1(IndexNextF),
     .rd1(BPDirPredF),
@@ -67,22 +67,22 @@ module openhw_gsharebasic import cvw::*; #(parameter cvw_t P,
     .we2(BranchM),
     .bwe2(1'b1));
 
-  openhw_flopenrc #(2) PredictionRegD(clk, reset,  FlushD, ~StallD, BPDirPredF, BPDirPredD);
-  openhw_flopenrc #(2) PredictionRegE(clk, reset,  FlushE, ~StallE, BPDirPredD, BPDirPredE);
+  flopenrc #(2) PredictionRegD(clk, reset,  FlushD, ~StallD, BPDirPredF, BPDirPredD);
+  flopenrc #(2) PredictionRegE(clk, reset,  FlushE, ~StallE, BPDirPredD, BPDirPredE);
 
-  openhw_satCounter2 BPDirUpdateE(.BrDir(PCSrcE), .OldState(BPDirPredE), .NewState(NewBPDirPredE));
-  openhw_flopenrc #(2) NewPredictionRegM(clk, reset,  FlushM, ~StallM, NewBPDirPredE, NewBPDirPredM);
+  satCounter2 BPDirUpdateE(.BrDir(PCSrcE), .OldState(BPDirPredE), .NewState(NewBPDirPredE));
+  flopenrc #(2) NewPredictionRegM(clk, reset,  FlushM, ~StallM, NewBPDirPredE, NewBPDirPredM);
 
   assign BPDirPredWrongE = PCSrcE != BPDirPredE[1] & BranchE;
 
   assign GHRNext = BranchM ? {PCSrcM, GHR[k-1:1]} : GHR;
-  openhw_flopenr #(k) GHRReg(clk, reset, ~StallM & ~FlushM & BranchM, GHRNext, GHR);
-  openhw_flopenrc #(1) PCSrcMReg(clk, reset, FlushM, ~StallM, PCSrcE, PCSrcM);
+  flopenr #(k) GHRReg(clk, reset, ~StallM & ~FlushM & BranchM, GHRNext, GHR);
+  flopenrc #(1) PCSrcMReg(clk, reset, FlushM, ~StallM, PCSrcE, PCSrcM);
     
-  openhw_flopenrc #(k) GHRFReg(clk, reset, FlushD, ~StallF, GHR, GHRF);
-  openhw_flopenrc #(k) GHRDReg(clk, reset, FlushD, ~StallD, GHRF, GHRD);
-  openhw_flopenrc #(k) GHREReg(clk, reset, FlushE, ~StallE, GHRD, GHRE);
-  openhw_flopenrc #(k) GHRMReg(clk, reset, FlushM, ~StallM, GHRE, GHRM);
+  flopenrc #(k) GHRFReg(clk, reset, FlushD, ~StallF, GHR, GHRF);
+  flopenrc #(k) GHRDReg(clk, reset, FlushD, ~StallD, GHRF, GHRD);
+  flopenrc #(k) GHREReg(clk, reset, FlushE, ~StallE, GHRD, GHRE);
+  flopenrc #(k) GHRMReg(clk, reset, FlushM, ~StallM, GHRE, GHRM);
 
 
 endmodule

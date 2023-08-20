@@ -32,7 +32,7 @@
 
 // WIDTH is number of bits in one "word" of the memory, DEPTH is number of such words
 
-module openhw_ram1p1rwbe import cvw::*; #(parameter cvw_t P, parameter DEPTH=64, WIDTH=44, 
+module ram1p1rwbe import cvw::*; #(parameter cvw_t P, parameter DEPTH=64, WIDTH=44, 
                                    parameter PRELOAD_ENABLED=0) (
   input logic                     clk,
   input logic                     ce,
@@ -54,7 +54,7 @@ module openhw_ram1p1rwbe import cvw::*; #(parameter cvw_t P, parameter DEPTH=64,
     logic [WIDTH-1:0] BitWriteMask;
     for (index=0; index < WIDTH; index++) 
       assign BitWriteMask[index] = bwe[index/8];
-    openhw_ram1p1rwbe_64x128 sram1A (.CLK(clk), .CEB(~ce), .WEB(~we),
+    ram1p1rwbe_64x128 sram1A (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB(~BitWriteMask), .Q(dout));
     
@@ -64,7 +64,7 @@ module openhw_ram1p1rwbe import cvw::*; #(parameter cvw_t P, parameter DEPTH=64,
     logic [WIDTH-1:0] BitWriteMask;
     for (index=0; index < WIDTH; index++) 
       assign BitWriteMask[index] = bwe[index/8];
-    openhw_ram1p1rwbe_64x44 sram1B (.CLK(clk), .CEB(~ce), .WEB(~we),
+    ram1p1rwbe_64x44 sram1B (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB(~BitWriteMask), .Q(dout));
 
@@ -74,7 +74,7 @@ module openhw_ram1p1rwbe import cvw::*; #(parameter cvw_t P, parameter DEPTH=64,
     logic [WIDTH-1:0] BitWriteMask;
     for (index=0; index < WIDTH; index++) 
       assign BitWriteMask[index] = bwe[index/8];
-    openhw_ram1p1rwbe_64x22 sram1B (.CLK(clk), .CEB(~ce), .WEB(~we),
+    ram1p1rwbe_64x22 sram1B (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB(~BitWriteMask), .Q(dout));     
     
@@ -92,7 +92,7 @@ module openhw_ram1p1rwbe import cvw::*; #(parameter cvw_t P, parameter DEPTH=64,
     
     // Read
     logic [$clog2(DEPTH)-1:0] addrd;
-    openhw_flopen #($clog2(DEPTH)) adrreg(clk, ce, addr, addrd);
+    flopen #($clog2(DEPTH)) adrreg(clk, ce, addr, addrd);
     assign dout = RAM[addrd];
 
     /*      // Read

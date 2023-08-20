@@ -28,7 +28,7 @@
 
 
 /* verilator lint_off UNOPTFLAT */
-module openhw_fdivsqrtstage2 import cvw::*;  #(parameter cvw_t P) (
+module fdivsqrtstage2 import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.DIVb+3:0] D, DBar, 
   input  logic [P.DIVb:0]   U, UM,
   input  logic [P.DIVb+3:0] WS, WC,
@@ -55,10 +55,10 @@ module openhw_fdivsqrtstage2 import cvw::*;  #(parameter cvw_t P) (
   // 0000 =  0
   // 0010 = -1
   // 0001 = -2
-  openhw_fdivsqrtqsel2 qsel2(WS[P.DIVb+3:P.DIVb], WC[P.DIVb+3:P.DIVb], up, uz, un);
+  fdivsqrtqsel2 qsel2(WS[P.DIVb+3:P.DIVb], WC[P.DIVb+3:P.DIVb], up, uz, un);
 
   // Sqrt F generation.  Extend C, U, UM to Q4.k
-  openhw_fdivsqrtfgen2 #(P) fgen2(.up, .uz, .C({2'b11, CNext}), .U({3'b000, U}), .UM({3'b000, UM}), .F);
+  fdivsqrtfgen2 #(P) fgen2(.up, .uz, .C({2'b11, CNext}), .U({3'b000, U}), .UM({3'b000, UM}), .F);
 
   // Divisor multiple
   always_comb
@@ -68,8 +68,8 @@ module openhw_fdivsqrtstage2 import cvw::*;  #(parameter cvw_t P) (
 
   // Partial Product Generation
   //  WSA, WCA = WS + WC - qD
-  openhw_mux2 #(P.DIVb+4) addinmux(Dsel, F, SqrtE, AddIn);
-  openhw_csa #(P.DIVb+4) csa(WS, WC, AddIn, up&~SqrtE, WSA, WCA);
+  mux2 #(P.DIVb+4) addinmux(Dsel, F, SqrtE, AddIn);
+  csa #(P.DIVb+4) csa(WS, WC, AddIn, up&~SqrtE, WSA, WCA);
   assign WSNext = WSA << 1;
   assign WCNext = WCA << 1;
 
@@ -77,7 +77,7 @@ module openhw_fdivsqrtstage2 import cvw::*;  #(parameter cvw_t P) (
   assign CNext = {1'b1, C[P.DIVb+1:1]};
 
   // Unified On-The-Fly Converter to accumulate result
-  openhw_fdivsqrtuotfc2 #(P) uotfc2(.up, .un, .C(CNext), .U, .UM, .UNext, .UMNext);
+  fdivsqrtuotfc2 #(P) uotfc2(.up, .un, .C(CNext), .U, .UM, .UNext, .UMNext);
 endmodule
 
 

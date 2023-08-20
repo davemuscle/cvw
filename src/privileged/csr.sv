@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_csr import cvw::*;  #(parameter cvw_t P) (
+module csr import cvw::*;  #(parameter cvw_t P) (
   input  logic                     clk, reset,
   input  logic                     FlushM, FlushW,
   input  logic                     StallE, StallM, StallW,
@@ -152,7 +152,7 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
 
   // Select trap vector from STVEC or MTVEC and word-align
   assign SelMtvecM = (NextPrivilegeModeM == P.M_MODE);
-  openhw_mux2 #(P.XLEN) tvecmux(STVEC_REGW, MTVEC_REGW, SelMtvecM, TVecM);
+  mux2 #(P.XLEN) tvecmux(STVEC_REGW, MTVEC_REGW, SelMtvecM, TVecM);
   assign TVecAlignedM = {TVecM[P.XLEN-1:2], 2'b00};
 
   // Support vectored interrupts
@@ -161,7 +161,7 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
     logic [P.XLEN-1:0] TVecPlusCauseM;
     assign VectoredM = InterruptM & (TVecM[1:0] == 2'b01);
     assign TVecPlusCauseM = {TVecAlignedM[P.XLEN-1:6], CauseM, 2'b00}; // 64-byte alignment allows concatenation rather than addition
-    openhw_mux2 #(P.XLEN) trapvecmux(TVecAlignedM, TVecPlusCauseM, VectoredM, TrapVectorM);
+    mux2 #(P.XLEN) trapvecmux(TVecAlignedM, TVecPlusCauseM, VectoredM, TrapVectorM);
   end else 
     assign TrapVectorM = TVecAlignedM; // unvectored interrupt handler can be at any word-aligned address. This is called Sstvecd
 
@@ -169,8 +169,8 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
   // A trap sets the PC to TrapVector
   // A return sets the PC to MEPC or SEPC
   assign RetM = mretM | sretM;
-  openhw_mux2 #(P.XLEN) epcmux(SEPC_REGW, MEPC_REGW, mretM, EPC);
-  openhw_mux3 #(P.XLEN) pcmux3(PC2NextF, EPC, TrapVectorM, {TrapM, RetM}, UnalignedPCNextF);
+  mux2 #(P.XLEN) epcmux(SEPC_REGW, MEPC_REGW, mretM, EPC);
+  mux3 #(P.XLEN) pcmux3(PC2NextF, EPC, TrapVectorM, {TrapM, RetM}, UnalignedPCNextF);
 
   ///////////////////////////////////////////
   // CSRWriteValM
@@ -216,12 +216,12 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
   // CSRs
   ///////////////////////////////////////////
 
-  openhw_csri #(P) csri(.clk, .reset,  
+  csri #(P) csri(.clk, .reset,  
     .CSRMWriteM, .CSRSWriteM, .CSRWriteValM, .CSRAdrM, 
     .MExtInt, .SExtInt, .MTimerInt, .STimerInt, .MSwInt,
     .MIDELEG_REGW, .ENVCFG_STCE, .MIP_REGW, .MIE_REGW, .MIP_REGW_writeable);
 
-  openhw_csrsr #(P) csrsr(.clk, .reset, .StallW, 
+  csrsr #(P) csrsr(.clk, .reset, .StallW, 
     .WriteMSTATUSM, .WriteMSTATUSHM, .WriteSSTATUSM, 
     .TrapM, .FRegWriteM, .NextPrivilegeModeM, .PrivilegeModeW,
     .mretM, .sretM, .WriteFRMM, .WriteFFLAGSM, .CSRWriteValM, .SelHPTW,
@@ -230,7 +230,7 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
     .STATUS_MIE, .STATUS_SIE, .STATUS_MXR, .STATUS_SUM, .STATUS_MPRV, .STATUS_TVM,
     .STATUS_FS, .BigEndianM);
 
-  openhw_csrm #(P) csrm(.clk, .reset, 
+  csrm #(P) csrm(.clk, .reset, 
     .UngatedCSRMWriteM, .CSRMWriteM, .MTrapM, .CSRAdrM,
     .NextEPCM, .NextCauseM, .NextMtvalM, .MSTATUS_REGW, .MSTATUSH_REGW,
     .CSRWriteValM, .CSRMReadValM, .MTVEC_REGW,
@@ -244,7 +244,7 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
   if (P.S_SUPPORTED) begin:csrs
     logic STCE; 
     assign STCE = P.SSTC_SUPPORTED & (PrivilegeModeW == P.M_MODE | (MCOUNTEREN_REGW[1] & ENVCFG_STCE));
-    openhw_csrs #(P) csrs(.clk, .reset,
+    csrs #(P) csrs(.clk, .reset,
       .CSRSWriteM, .STrapM, .CSRAdrM,
       .NextEPCM, .NextCauseM, .NextMtvalM, .SSTATUS_REGW, 
       .STATUS_TVM, .MCOUNTEREN_TM(MCOUNTEREN_REGW[1]),
@@ -265,7 +265,7 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
 
   // Floating Point CSRs in User Mode only needed if Floating Point is supported
   if (P.F_SUPPORTED | P.D_SUPPORTED) begin:csru
-    openhw_csru #(P) csru(.clk, .reset, .InstrValidNotFlushedM, 
+    csru #(P) csru(.clk, .reset, .InstrValidNotFlushedM, 
       .CSRUWriteM, .CSRAdrM, .CSRWriteValM, .STATUS_FS, .CSRUReadValM,  
       .SetFflagsM, .FRM_REGW, .WriteFRMM, .WriteFFLAGSM,
       .IllegalCSRUAccessM);
@@ -276,7 +276,7 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
   end
   
   if (P.ZICNTR_SUPPORTED) begin:counters
-    openhw_csrc #(P) counters(.clk, .reset, .StallE, .StallM, .FlushM,
+    csrc #(P) counters(.clk, .reset, .StallE, .StallM, .FlushM,
       .InstrValidNotFlushedM, .LoadStallD, .StoreStallD, .CSRWriteM, .CSRMWriteM,
       .BPDirPredWrongM, .BTAWrongM, .RASPredPCWrongM, .IClassWrongM, .BPWrongM,
       .InstrClassM, .DCacheMiss, .DCacheAccess, .ICacheMiss, .ICacheAccess, .sfencevmaM,
@@ -302,7 +302,7 @@ module openhw_csr import cvw::*;  #(parameter cvw_t P) (
 
   // merge CSR Reads
   assign CSRReadValM = CSRUReadValM | CSRSReadValM | CSRMReadValM | CSRCReadValM; 
-  openhw_flopenrc #(P.XLEN) CSRValWReg(clk, reset, FlushW, ~StallW, CSRReadValM, CSRReadValW);
+  flopenrc #(P.XLEN) CSRValWReg(clk, reset, FlushW, ~StallW, CSRReadValM, CSRReadValW);
 
   // merge illegal accesses: illegal if none of the CSR addresses is legal or privilege is insufficient
   assign InsufficientCSRPrivilegeM = (CSRAdrM[9:8] == 2'b11 & PrivilegeModeW != P.M_MODE) |

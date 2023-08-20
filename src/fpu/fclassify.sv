@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fclassify import cvw::*;  #(parameter cvw_t P) (
+module fclassify import cvw::*;  #(parameter cvw_t P) (
   input  logic                Xs,         // sign bit
   input  logic                XNaN,       // is NaN
   input  logic                XSNaN,      // is signaling NaN

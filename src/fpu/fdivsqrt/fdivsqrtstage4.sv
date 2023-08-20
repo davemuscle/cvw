@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fdivsqrtstage4 import cvw::*;  #(parameter cvw_t P) (
+module fdivsqrtstage4 import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.DIVb+3:0] D, DBar, D2, DBar2,
   input  logic [P.DIVb:0]   U,UM,
   input  logic [P.DIVb+3:0] WS, WC,
@@ -60,11 +60,11 @@ module openhw_fdivsqrtstage4 import cvw::*;  #(parameter cvw_t P) (
   assign WCmsbs = WC[P.DIVb+3:P.DIVb-4];
   assign WSmsbs = WS[P.DIVb+3:P.DIVb-4];
 
-  openhw_fdivsqrtqsel4cmp qsel4(.Dmsbs, .Smsbs, .WSmsbs, .WCmsbs, .SqrtE, .j1, .udigit);
+  fdivsqrtqsel4cmp qsel4(.Dmsbs, .Smsbs, .WSmsbs, .WCmsbs, .SqrtE, .j1, .udigit);
   assign un = 1'b0; // unused for radix 4
 
   // F generation logic
-  openhw_fdivsqrtfgen4 #(P) fgen4(.udigit, .C({2'b11, CNext}), .U({3'b000, U}), .UM({3'b000, UM}), .F);
+  fdivsqrtfgen4 #(P) fgen4(.udigit, .C({2'b11, CNext}), .U({3'b000, U}), .UM({3'b000, UM}), .F);
 
   // Divisor multiple logic
   always_comb
@@ -81,7 +81,7 @@ module openhw_fdivsqrtstage4 import cvw::*;  #(parameter cvw_t P) (
   //  {WS, WC}}Next = (WS + WC - qD or F) << 2
   assign AddIn = SqrtE ? F : Dsel;
   assign CarryIn = ~SqrtE & (udigit[3] | udigit[2]); // +1 for 2's complement of -D and -2D 
-  openhw_csa #(P.DIVb+4) csa(WS, WC, AddIn, CarryIn, WSA, WCA);
+  csa #(P.DIVb+4) csa(WS, WC, AddIn, CarryIn, WSA, WCA);
   assign WSNext = WSA << 2;
   assign WCNext = WCA << 2;
 
@@ -89,7 +89,7 @@ module openhw_fdivsqrtstage4 import cvw::*;  #(parameter cvw_t P) (
   assign CNext = {2'b11, C[P.DIVb+1:2]};
  
   // On-the-fly converter to accumulate result
-  openhw_fdivsqrtuotfc4 #(P) fdivsqrtuotfc4(.udigit, .C(CNext[P.DIVb:0]), .U, .UM, .UNext, .UMNext);
+  fdivsqrtuotfc4 #(P) fdivsqrtuotfc4(.udigit, .C(CNext[P.DIVb:0]), .U, .UM, .UNext, .UMNext);
 endmodule
 
 

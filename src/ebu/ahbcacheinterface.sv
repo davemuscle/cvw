@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_ahbcacheinterface #(
+module ahbcacheinterface #(
   parameter AHBW,
   parameter LLEN,
   parameter PA_BITS,
@@ -87,14 +87,14 @@ module openhw_ahbcacheinterface #(
   for (index = 0; index < BEATSPERLINE; index++) begin:fetchbuffer
     logic [BEATSPERLINE-1:0] CaptureBeat;
     assign CaptureBeat[index] = CaptureEn & (index == BeatCountDelayed);
-    openhw_flopen #(AHBW) fb(.clk(HCLK), .en(CaptureBeat[index]), .d(HRDATA),
+    flopen #(AHBW) fb(.clk(HCLK), .en(CaptureBeat[index]), .d(HRDATA),
       .q(FetchBuffer[(index+1)*AHBW-1:index*AHBW]));
   end
 
-  openhw_mux2 #(PA_BITS) localadrmux(PAdr, CacheBusAdr, Cacheable, LocalHADDR);
+  mux2 #(PA_BITS) localadrmux(PAdr, CacheBusAdr, Cacheable, LocalHADDR);
   assign HADDR = ({{PA_BITS-AHBWLOGBWPL{1'b0}}, BeatCount} << $clog2(AHBW/8)) + LocalHADDR;
 
-  openhw_mux2 #(3) sizemux(.d0(Funct3), .d1(AHBW == 32 ? 3'b010 : 3'b011), .s(Cacheable), .y(HSIZE));
+  mux2 #(3) sizemux(.d0(Funct3), .d1(AHBW == 32 ? 3'b010 : 3'b011), .s(Cacheable), .y(HSIZE));
 
   // When AHBW is less than LLEN need extra muxes to select the subword from cache's read data.
   logic [AHBW-1:0]          CacheReadDataWordAHB;
@@ -107,17 +107,17 @@ module openhw_ahbcacheinterface #(
     assign CacheReadDataWordAHB = AHBWordSets[BeatCount[$clog2(LLENPOVERAHBW)-1:0]];
   end else assign CacheReadDataWordAHB = CacheReadDataWordM[AHBW-1:0];      
   
-  openhw_mux2 #(AHBW) HWDATAMux(.d0(CacheReadDataWordAHB), .d1(WriteDataM[AHBW-1:0]),
+  mux2 #(AHBW) HWDATAMux(.d0(CacheReadDataWordAHB), .d1(WriteDataM[AHBW-1:0]),
     .s(~(CacheableOrFlushCacheM)), .y(PreHWDATA));
   flopen #(AHBW) wdreg(HCLK, HREADY, PreHWDATA, HWDATA); // delay HWDATA by 1 cycle per spec
 
   // *** bummer need a second byte mask for bus as it is AHBW rather than LLEN.
   // probably can merge by muxing PAdrM's LLEN/8-1 index bit based on HTRANS being != 0.
-  openhw_swbytemask #(AHBW) busswbytemask(.Size(HSIZE), .Adr(HADDR[$clog2(AHBW/8)-1:0]), .ByteMask(BusByteMaskM));
+  swbytemask #(AHBW) busswbytemask(.Size(HSIZE), .Adr(HADDR[$clog2(AHBW/8)-1:0]), .ByteMask(BusByteMaskM));
   
-  openhw_flopen #(AHBW/8) HWSTRBReg(HCLK, HREADY, BusByteMaskM[AHBW/8-1:0], HWSTRB);
+  flopen #(AHBW/8) HWSTRBReg(HCLK, HREADY, BusByteMaskM[AHBW/8-1:0], HWSTRB);
   
-  openhw_buscachefsm #(BeatCountThreshold, AHBWLOGBWPL, READ_ONLY_CACHE) AHBBuscachefsm(
+  buscachefsm #(BeatCountThreshold, AHBWLOGBWPL, READ_ONLY_CACHE) AHBBuscachefsm(
     .HCLK, .HRESETn, .Flush, .BusRW, .Stall, .BusCommitted, .BusStall, .CaptureEn, .SelBusBeat,
     .CacheBusRW, .CacheBusAck, .BeatCount, .BeatCountDelayed,
     .HREADY, .HTRANS, .HWRITE, .HBURST);

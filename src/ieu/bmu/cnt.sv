@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_cnt #(parameter WIDTH = 32) (
+module cnt #(parameter WIDTH = 32) (
   input  logic [WIDTH-1:0] A, RevA,    // Operands
   input  logic [1:0]       B,          // Last 2 bits of immediate
   input  logic             W64,        // Indicates word operation
@@ -43,21 +43,21 @@ module openhw_cnt #(parameter WIDTH = 32) (
   //only in rv64
   if (WIDTH==64) begin
     //clz input select mux
-    openhw_mux4 #(WIDTH) lzcmux64(A, {A[31:0],{32{1'b1}}}, RevA, {RevA[63:32],{32{1'b1}}}, {B[0],W64}, lzcA);
+    mux4 #(WIDTH) lzcmux64(A, {A[31:0],{32{1'b1}}}, RevA, {RevA[63:32],{32{1'b1}}}, {B[0],W64}, lzcA);
     //cpop select mux
-    openhw_mux2 #(WIDTH) popcntmux64(A, {{32{1'b0}}, A[31:0]}, W64, popcntA);
+    mux2 #(WIDTH) popcntmux64(A, {{32{1'b0}}, A[31:0]}, W64, popcntA);
   end
   //rv32
   else begin
     assign popcntA = A;
-    openhw_mux2 #(WIDTH) lzcmux32(A, RevA, B[0], lzcA);
+    mux2 #(WIDTH) lzcmux32(A, RevA, B[0], lzcA);
   end
 
-  openhw_lzc #(WIDTH) lzc(.num(lzcA), .ZeroCnt(czResult[$clog2(WIDTH):0]));
-  openhw_popcnt #(WIDTH) popcntw(.num(popcntA), .PopCnt(cpopResult[$clog2(WIDTH):0]));
+  lzc #(WIDTH) lzc(.num(lzcA), .ZeroCnt(czResult[$clog2(WIDTH):0]));
+  popcnt #(WIDTH) popcntw(.num(popcntA), .PopCnt(cpopResult[$clog2(WIDTH):0]));
   // zero extend these results to fit into width
   assign czResult[WIDTH-1:$clog2(WIDTH)+1] = '0;
   assign cpopResult[WIDTH-1:$clog2(WIDTH)+1] = '0;
 
-  openhw_mux2 #(WIDTH) cntresultmux(czResult, cpopResult, B[1], CntResult);
+  mux2 #(WIDTH) cntresultmux(czResult, cpopResult, B[1], CntResult);
 endmodule

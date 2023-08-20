@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_tlblru #(parameter TLB_ENTRIES = 8) (
+module tlblru #(parameter TLB_ENTRIES = 8) (
   input  logic                    clk, reset,
   input  logic                    TLBWrite,
   input  logic                    TLBFlush,
@@ -42,7 +42,7 @@ module openhw_tlblru #(parameter TLB_ENTRIES = 8) (
   logic                           AllUsed;  // High if the next access causes all RU bits to be 1
 
   // Find the first line not recently used
-  openhw_priorityonehot #(TLB_ENTRIES) nru(.a(~RUBits), .y(WriteLines));
+  priorityonehot #(TLB_ENTRIES) nru(.a(~RUBits), .y(WriteLines));
 
   // Track recently used lines, updating on a CAM Hit or TLB write
   assign WriteEnables = WriteLines & {(TLB_ENTRIES){TLBWrite}};
@@ -50,5 +50,5 @@ module openhw_tlblru #(parameter TLB_ENTRIES = 8) (
   assign RUBitsAccessed = AccessLines | RUBits;
   assign AllUsed = &RUBitsAccessed; // if all recently used, then clear to none
   assign RUBitsNext = AllUsed ? 0 : RUBitsAccessed; 
-  openhw_flopenr #(TLB_ENTRIES) lrustate(clk, reset, (CAMHit | TLBWrite), RUBitsNext, RUBits);
+  flopenr #(TLB_ENTRIES) lrustate(clk, reset, (CAMHit | TLBWrite), RUBitsNext, RUBits);
 endmodule

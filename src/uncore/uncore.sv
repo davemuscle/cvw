@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_uncore import cvw::*;  #(parameter cvw_t P)(
+module uncore import cvw::*;  #(parameter cvw_t P)(
   // AHB Bus Interface
   input  logic                 HCLK, HRESETn,
   input  logic                 TIMECLK,
@@ -85,13 +85,13 @@ module openhw_uncore import cvw::*;  #(parameter cvw_t P)(
   // Determine which region of physical memory (if any) is being accessed
   // Use a trimmed down portion of the PMA checker - only the address decoders
   // Set access types to all 1 as don't cares because the MMU has already done access checking
-  openhw_adrdecs #(P) adrdecs(HADDR, 1'b1, 1'b1, 1'b1, HSIZE[1:0], HSELRegions);
+  adrdecs #(P) adrdecs(HADDR, 1'b1, 1'b1, 1'b1, HSIZE[1:0], HSELRegions);
 
   // unswizzle HSEL signals
   assign {HSELDTIM, HSELIROM, HSELEXT, HSELBootRom, HSELRam, HSELCLINT, HSELGPIO, HSELUART, HSELPLIC, HSELEXTSDC} = HSELRegions[10:1];
 
   // AHB -> APB bridge
-  openhw_ahbapbbridge #(P, 4) openhw_ahbapbbridge (
+  ahbapbbridge #(P, 4) ahbapbbridge (
     .HCLK, .HRESETn, .HSEL({HSELUART, HSELPLIC, HSELCLINT, HSELGPIO}), .HADDR, .HWDATA, .HWSTRB, .HWRITE, .HTRANS, .HREADY, 
     .HRDATA(HREADBRIDGE), .HRESP(HRESPBRIDGE), .HREADYOUT(HREADYBRIDGE),
     .PCLK, .PRESETn, .PSEL, .PWRITE, .PENABLE, .PADDR, .PWDATA, .PSTRB, .PREADY, .PRDATA);
@@ -99,20 +99,20 @@ module openhw_uncore import cvw::*;  #(parameter cvw_t P)(
                 
   // on-chip RAM
   if (P.UNCORE_RAM_SUPPORTED) begin : ram
-    openhw_ram_ahb #(.P(P), .BASE(P.UNCORE_RAM_BASE), .RANGE(P.UNCORE_RAM_RANGE)) ram (
+    ram_ahb #(.P(P), .BASE(P.UNCORE_RAM_BASE), .RANGE(P.UNCORE_RAM_RANGE)) ram (
       .HCLK, .HRESETn, .HSELRam, .HADDR, .HWRITE, .HREADY, 
       .HTRANS, .HWDATA, .HWSTRB, .HREADRam, .HRESPRam, .HREADYRam);
   end
 
  if (P.BOOTROM_SUPPORTED) begin : bootrom
-    openhw_rom_ahb #(.P(P), .BASE(P.BOOTROM_BASE), .RANGE(P.BOOTROM_RANGE))
+    rom_ahb #(.P(P), .BASE(P.BOOTROM_BASE), .RANGE(P.BOOTROM_RANGE))
     bootrom(.HCLK, .HRESETn, .HSELRom(HSELBootRom), .HADDR, .HREADY, .HTRANS, 
       .HREADRom(HREADBootRom), .HRESPRom(HRESPBootRom), .HREADYRom(HREADYBootRom));
   end
 
   // memory-mapped I/O peripherals
   if (P.CLINT_SUPPORTED == 1) begin : clint
-    openhw_clint_apb #(P) clint(.PCLK, .PRESETn, .PSEL(PSEL[1]), .PADDR(PADDR[15:0]), .PWDATA, .PSTRB, .PWRITE, .PENABLE, 
+    clint_apb #(P) clint(.PCLK, .PRESETn, .PSEL(PSEL[1]), .PADDR(PADDR[15:0]), .PWDATA, .PSTRB, .PWRITE, .PENABLE, 
       .PRDATA(PRDATA[1]), .PREADY(PREADY[1]), .MTIME(MTIME_CLINT), .MTimerInt, .MSwInt);
   end else begin : clint
     assign MTIME_CLINT = 0;
@@ -120,7 +120,7 @@ module openhw_uncore import cvw::*;  #(parameter cvw_t P)(
   end
 
   if (P.PLIC_SUPPORTED == 1) begin : plic
-    openhw_plic_apb #(P) plic(.PCLK, .PRESETn, .PSEL(PSEL[2]), .PADDR(PADDR[27:0]), .PWDATA, .PSTRB, .PWRITE, .PENABLE, 
+    plic_apb #(P) plic(.PCLK, .PRESETn, .PSEL(PSEL[2]), .PADDR(PADDR[27:0]), .PWDATA, .PSTRB, .PWRITE, .PENABLE, 
       .PRDATA(PRDATA[2]), .PREADY(PREADY[2]), .UARTIntr, .GPIOIntr, .SDCIntr, .MExtInt, .SExtInt);
   end else begin : plic
     assign MExtInt = 0;
@@ -128,7 +128,7 @@ module openhw_uncore import cvw::*;  #(parameter cvw_t P)(
   end
 
   if (P.GPIO_SUPPORTED == 1) begin : gpio
-    openhw_gpio_apb #(P) gpio(
+    gpio_apb #(P) gpio(
       .PCLK, .PRESETn, .PSEL(PSEL[0]), .PADDR(PADDR[7:0]), .PWDATA, .PSTRB, .PWRITE, .PENABLE, 
       .PRDATA(PRDATA[0]), .PREADY(PREADY[0]), 
       .iof0(), .iof1(), .GPIOIN, .GPIOOUT, .GPIOEN, .GPIOIntr);
@@ -136,7 +136,7 @@ module openhw_uncore import cvw::*;  #(parameter cvw_t P)(
     assign GPIOOUT = 0; assign GPIOEN = 0; assign GPIOIntr = 0;
   end
   if (P.UART_SUPPORTED == 1) begin : uart
-    openhw_uart_apb #(P) uart(
+    uart_apb #(P) uart(
       .PCLK, .PRESETn, .PSEL(PSEL[3]), .PADDR(PADDR[2:0]), .PWDATA, .PSTRB, .PWRITE, .PENABLE, 
       .PRDATA(PRDATA[3]), .PREADY(PREADY[3]), 
       .SIN(UARTSin), .DSRb(1'b1), .DCDb(1'b1), .CTSb(1'b0), .RIb(1'b1), // from E1A driver from RS232 interface
@@ -168,6 +168,6 @@ module openhw_uncore import cvw::*;  #(parameter cvw_t P)(
   // takes more than 1 cycle to repsond it needs to hold on to the old select until the
   // device is ready.  Hense this register must be selectively enabled by HREADY.
   // However on reset None must be seleted.
-  openhw_flopenl #(11) hseldelayreg(HCLK, ~HRESETn, HREADY, HSELRegions, 11'b1, {HSELDTIMD, HSELIROMD, HSELEXTD, HSELBootRomD, HSELRamD, HSELCLINTD, HSELGPIOD, HSELUARTD, HSELPLICD, HSELEXTSDCD, HSELNoneD});
-  openhw_flopenr #(1) hselbridgedelayreg(HCLK, ~HRESETn, HREADY, HSELBRIDGE, HSELBRIDGED);
+  flopenl #(11) hseldelayreg(HCLK, ~HRESETn, HREADY, HSELRegions, 11'b1, {HSELDTIMD, HSELIROMD, HSELEXTD, HSELBootRomD, HSELRamD, HSELCLINTD, HSELGPIOD, HSELUARTD, HSELPLICD, HSELEXTSDCD, HSELNoneD});
+  flopenr #(1) hselbridgedelayreg(HCLK, ~HRESETn, HREADY, HSELBRIDGE, HSELBRIDGED);
 endmodule

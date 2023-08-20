@@ -35,7 +35,7 @@
 
 /* verilator lint_off UNOPTFLAT */
 
-module openhw_uartPC16550D #(parameter UART_PRESCALE) (
+module uartPC16550D #(parameter UART_PRESCALE) (
   // Processor Interface
   input  logic       PCLK, PRESETn,                  // UART clock and active low reset
   input  logic [2:0] A,                              // address input (8 registers)
@@ -525,12 +525,12 @@ module openhw_uartPC16550D #(parameter UART_PRESCALE) (
   assign setSquashRXerrIP = ~MEMRb & (A==3'b101);
   assign resetSquashRXerrIP = (rxstate == UART_DONE);
   assign squashRXerrIP = (prevSquashRXerrIP | setSquashRXerrIP) & ~resetSquashRXerrIP;
-  openhw_flopr #(1) squashRXerrIPreg(PCLK, ~PRESETn, squashRXerrIP, prevSquashRXerrIP);
+  flopr #(1) squashRXerrIPreg(PCLK, ~PRESETn, squashRXerrIP, prevSquashRXerrIP);
   // Side effect of reading IIR is lowering THRE_IP if most significant intr
   assign setSquashTHRE_IP = ~MEMRb & (A==3'b010) & (intrID==3'h1); // there's a 1-cycle delay on set squash so that THRE_IP doesn't change during the process of reading IIR (otherwise combinational loop)
   assign resetSquashTHRE_IP = ~THRE;
   assign squashTHRE_IP = prevSquashTHRE_IP & ~resetSquashTHRE_IP;
-  openhw_flopr #(1) squashTHRE_IPreg(PCLK, ~PRESETn, squashTHRE_IP | setSquashTHRE_IP, prevSquashTHRE_IP);
+  flopr #(1) squashTHRE_IPreg(PCLK, ~PRESETn, squashTHRE_IP | setSquashTHRE_IP, prevSquashTHRE_IP);
 
   ///////////////////////////////////////////
   // modem control logic

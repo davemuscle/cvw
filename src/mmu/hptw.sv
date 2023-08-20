@@ -29,7 +29,7 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ///////////////////////////////////////////
 
-module openhw_hptw import cvw::*;  #(parameter cvw_t P) (
+module hptw import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset,
   input  logic [P.XLEN-1:0] SATP_REGW,              // includes SATP.MODE to determine number of levels in page table
   input  logic [P.XLEN-1:0] PCSpillF,               // addresses to translate
@@ -108,7 +108,7 @@ module openhw_hptw import cvw::*;  #(parameter cvw_t P) (
   assign HPTWStoreAmoAccessFault = LSUAccessFaultM & DTLBWalk & MemRWM[0];
   assign HPTWInstrAccessFault    = LSUAccessFaultM & ~DTLBWalk;
 
-  openhw_flopr #(4) HPTWAccesFaultReg(clk, reset, {TakeHPTWFault, HPTWLoadAccessFault, HPTWStoreAmoAccessFault, HPTWInstrAccessFault},
+  flopr #(4) HPTWAccesFaultReg(clk, reset, {TakeHPTWFault, HPTWLoadAccessFault, HPTWStoreAmoAccessFault, HPTWInstrAccessFault},
                                {TakeHPTWFaultDelay, HPTWLoadAccessFaultDelay, HPTWStoreAmoAccessFaultDelay, HPTWInstrAccessFaultDelay});
 
   assign TakeHPTWFault = WalkerState != IDLE;
@@ -123,7 +123,7 @@ module openhw_hptw import cvw::*;  #(parameter cvw_t P) (
   assign TLBMiss = (DTLBMissOrUpdateDAM | ITLBMissOrUpdateDAF);
 
   // Determine which address to translate
-  openhw_mux2 #(P.XLEN) vadrmux(PCSpillF, IEUAdrExtM[P.XLEN-1:0], DTLBWalk, TranslationVAdr);
+  mux2 #(P.XLEN) vadrmux(PCSpillF, IEUAdrExtM[P.XLEN-1:0], DTLBWalk, TranslationVAdr);
   assign CurrentPPN = PTE[P.PPN_BITS+9:10];
 
   // State flops
@@ -153,12 +153,12 @@ module openhw_hptw import cvw::*;  #(parameter cvw_t P) (
     logic [P.XLEN-1:0]    AccessedPTE;
 
     assign AccessedPTE = {PTE[P.XLEN-1:8], (SetDirty | PTE[7]), 1'b1, PTE[5:0]}; // set accessed bit, conditionally set dirty bit
-    openhw_mux2 #(P.XLEN) NextPTEMux(ReadDataM, AccessedPTE, UpdatePTE, NextPTE);
-    openhw_flopenr #(P.PA_BITS) HPTWAdrWriteReg(clk, reset, SaveHPTWAdr, HPTWReadAdr, HPTWWriteAdr);
+    mux2 #(P.XLEN) NextPTEMux(ReadDataM, AccessedPTE, UpdatePTE, NextPTE);
+    flopenr #(P.PA_BITS) HPTWAdrWriteReg(clk, reset, SaveHPTWAdr, HPTWReadAdr, HPTWWriteAdr);
   
     assign SaveHPTWAdr = WalkerState == L0_ADR;
     assign SelHPTWWriteAdr = UpdatePTE | HPTWRW[0];
-    openhw_mux2 #(P.PA_BITS) HPTWWriteAdrMux(HPTWReadAdr, HPTWWriteAdr, SelHPTWWriteAdr, HPTWAdr); 
+    mux2 #(P.PA_BITS) HPTWWriteAdrMux(HPTWReadAdr, HPTWWriteAdr, SelHPTWWriteAdr, HPTWAdr); 
 
     assign {Dirty, Accessed} = PTE[7:6];
     assign WriteAccess = MemRWM[0]; // implies | (|AtomicM);
@@ -170,10 +170,10 @@ module openhw_hptw import cvw::*;  #(parameter cvw_t P) (
                                ((EffectivePrivilegeMode == P.S_MODE) & PTE_U & (~STATUS_SUM & DTLBWalk));
 
     // Check for page faults
-    openhw_vm64check #(P) vm64check(.SATP_MODE(SATP_REGW[P.XLEN-1:P.XLEN-P.SVMODE_BITS]), .VAdr(TranslationVAdr), 
+    vm64check #(P) vm64check(.SATP_MODE(SATP_REGW[P.XLEN-1:P.XLEN-P.SVMODE_BITS]), .VAdr(TranslationVAdr), 
       .SV39Mode(), .UpperBitsUnequal);
     // This register is not functionally necessary, but improves the critical path.
-    openhw_flopr #(1) upperbitsunequalreg(clk, reset, UpperBitsUnequal, UpperBitsUnequalD);
+    flopr #(1) upperbitsunequalreg(clk, reset, UpperBitsUnequal, UpperBitsUnequalD);
     assign InvalidRead = ReadAccess & ~Readable & (~STATUS_MXR | ~Executable);
     assign InvalidWrite = WriteAccess & ~Writable;
     assign InvalidOp = DTLBWalk ? (InvalidRead | InvalidWrite) : ~Executable;
@@ -202,7 +202,7 @@ module openhw_hptw import cvw::*;  #(parameter cvw_t P) (
   assign ITLBWriteF = (WalkerState == LEAF & ~HPTWUpdateDA) & ~DTLBWalk;
   
   // FSM to track PageType based on the levels of the page table traversed
-  openhw_flopr #(2) PageTypeReg(clk, reset, NextPageType, PageType);
+  flopr #(2) PageTypeReg(clk, reset, NextPageType, PageType);
   always_comb 
     case (WalkerState)
       L3_RD:  NextPageType = 2'b11; // terapage
@@ -258,7 +258,7 @@ module openhw_hptw import cvw::*;  #(parameter cvw_t P) (
   // 2. If the store would generate an exception don't store to dcache but still write the TLB.  When we go back
   // to LEAF then the PMA/P.  Wait this does not work.  The PMA/P won't be looking a the address in the table, but
   // rather than physical address of the translated instruction/data.  So we must generate the exception.
-  openhw_flopenl #(.TYPE(statetype)) WalkerStateReg(clk, reset | FlushW, 1'b1, NextWalkerState, IDLE, WalkerState); 
+  flopenl #(.TYPE(statetype)) WalkerStateReg(clk, reset | FlushW, 1'b1, NextWalkerState, IDLE, WalkerState); 
   always_comb 
     case (WalkerState)
       IDLE:       if (TLBMiss & ~DCacheStallM)                        NextWalkerState = InitialWalkerState;
@@ -313,13 +313,13 @@ module openhw_hptw import cvw::*;  #(parameter cvw_t P) (
   // multiplex the outputs to LSU
   if(P.XLEN == 64) assign HPTWAdrExt = {{(P.XLEN+2-P.PA_BITS){1'b0}}, HPTWAdr}; // extend to 66 bits
   else             assign HPTWAdrExt = HPTWAdr;
-  openhw_mux2 #(2) rwmux(MemRWM, HPTWRW, SelHPTW, PreLSURWM);
-  openhw_mux2 #(3) sizemux(Funct3M, HPTWSize, SelHPTW, LSUFunct3M);
-  openhw_mux2 #(7) funct7mux(Funct7M, 7'b0, SelHPTW, LSUFunct7M);    
-  openhw_mux2 #(2) atomicmux(AtomicM, 2'b00, SelHPTW, LSUAtomicM);
-  openhw_mux2 #(P.XLEN+2) lsupadrmux(IEUAdrExtM, HPTWAdrExt, SelHPTWAdr, IHAdrM);
+  mux2 #(2) rwmux(MemRWM, HPTWRW, SelHPTW, PreLSURWM);
+  mux2 #(3) sizemux(Funct3M, HPTWSize, SelHPTW, LSUFunct3M);
+  mux2 #(7) funct7mux(Funct7M, 7'b0, SelHPTW, LSUFunct7M);    
+  mux2 #(2) atomicmux(AtomicM, 2'b00, SelHPTW, LSUAtomicM);
+  mux2 #(P.XLEN+2) lsupadrmux(IEUAdrExtM, HPTWAdrExt, SelHPTWAdr, IHAdrM);
   if(P.SVADU_SUPPORTED)
-    openhw_mux2 #(P.XLEN) lsuwritedatamux(WriteDataM, PTE, SelHPTW, IHWriteDataM);
+    mux2 #(P.XLEN) lsuwritedatamux(WriteDataM, PTE, SelHPTW, IHWriteDataM);
   else assign IHWriteDataM = WriteDataM;
 
 endmodule

@@ -29,7 +29,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_tlbcamline import cvw::*;  #(parameter cvw_t P, 
+module tlbcamline import cvw::*;  #(parameter cvw_t P, 
                                     parameter KEY_BITS = 20, SEGMENT_BITS = 10) (
   input  logic                  clk, reset,
   input  logic [P.VPN_BITS-1:0]  VPN, // The requested page number to compare against the key
@@ -93,13 +93,13 @@ module openhw_tlbcamline import cvw::*;  #(parameter cvw_t P,
   end
 
   // On a write, update the type of the page referred to by this line.
-  openhw_flopenr #(2) pagetypeflop(clk, reset, WriteEnable, PageTypeWriteVal, PageType);
+  flopenr #(2) pagetypeflop(clk, reset, WriteEnable, PageTypeWriteVal, PageType);
   assign PageTypeRead = PageType & {2{Match}};
 
   // On a write, set the valid bit high and update the stored key.
   // On a flush, zero the valid bit and leave the key unchanged.
   // *** Might we want to update stored key right away to output match on the
   // write cycle? (using a mux)
-  openhw_flopenr #(1) validbitflop(clk, reset, WriteEnable | TLBFlush, ~TLBFlush, Valid);
-  openhw_flopenr #(KEY_BITS) keyflop(clk, reset, WriteEnable, {SATP_ASID, VPN}, Key);
+  flopenr #(1) validbitflop(clk, reset, WriteEnable | TLBFlush, ~TLBFlush, Valid);
+  flopenr #(KEY_BITS) keyflop(clk, reset, WriteEnable, {SATP_ASID, VPN}, Key);
 endmodule

@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_atomic import cvw::*;  #(parameter cvw_t P) (
+module atomic import cvw::*;  #(parameter cvw_t P) (
   input logic                 clk,
   input logic                 reset, 
   input logic                 StallW,
@@ -47,11 +47,11 @@ module openhw_atomic import cvw::*;  #(parameter cvw_t P) (
   logic [P.XLEN-1:0]          AMOResultM;
   logic                       MemReadM;
 
-  openhw_amoalu #(P) amoalu(.ReadDataM, .IHWriteDataM, .LSUFunct7M, .LSUFunct3M, .AMOResultM);
+  amoalu #(P) amoalu(.ReadDataM, .IHWriteDataM, .LSUFunct7M, .LSUFunct3M, .AMOResultM);
 
-  openhw_mux2 #(P.XLEN) wdmux(IHWriteDataM, AMOResultM, LSUAtomicM[1], IMAWriteDataM);
+  mux2 #(P.XLEN) wdmux(IHWriteDataM, AMOResultM, LSUAtomicM[1], IMAWriteDataM);
   assign MemReadM = PreLSURWM[1] & ~IgnoreRequest;
 
-  openhw_lrsc #(P) lrsc(.clk, .reset, .StallW, .MemReadM, .PreLSURWM, .LSUAtomicM, .PAdrM, .SquashSCW, .LSURWM);
+  lrsc #(P) lrsc(.clk, .reset, .StallW, .MemReadM, .PreLSURWM, .LSUAtomicM, .PAdrM, .SquashSCW, .LSURWM);
 
 endmodule  

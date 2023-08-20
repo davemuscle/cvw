@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_clockgater #(parameter FPGA) (
+module clockgater #(parameter FPGA) (
   input  logic E,
   input  logic SE,
   input  logic CLK,

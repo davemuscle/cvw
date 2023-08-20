@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_cacheway import cvw::*; #(parameter cvw_t P, 
+module cacheway import cvw::*; #(parameter cvw_t P, 
                   parameter PA_BITS, XLEN, NUMLINES=512, LINELEN = 256, TAGLEN = 26,
                   OFFSETLEN = 5, INDEXLEN = 9, READ_ONLY_CACHE = 0) (
   input  logic                        clk,
@@ -78,7 +78,7 @@ module openhw_cacheway import cvw::*; #(parameter cvw_t P,
   if (!READ_ONLY_CACHE) begin:flushlogic
     logic                               FlushWayEn;
 
-    openhw_mux2 #(1) seltagmux(VictimWay, FlushWay, SelFlush, SelTag);
+    mux2 #(1) seltagmux(VictimWay, FlushWay, SelFlush, SelTag);
 
     // FlushWay is part of a one hot way selection. Must clear it if FlushWay not selected.
     // coverage off -item e 1 -fecexprrow 3
@@ -90,7 +90,7 @@ module openhw_cacheway import cvw::*; #(parameter cvw_t P,
     assign SelNonHit = SetValid;
   end
 
-  openhw_mux2 #(1) selectedwaymux(HitWay, SelTag, SelNonHit , SelData);
+  mux2 #(1) selectedwaymux(HitWay, SelTag, SelNonHit , SelData);
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   // Write Enable demux
@@ -109,7 +109,7 @@ module openhw_cacheway import cvw::*; #(parameter cvw_t P,
   // Tag Array
   /////////////////////////////////////////////////////////////////////////////////////////////
 
-  openhw_ram1p1rwe #(.P(P), .DEPTH(NUMLINES), .WIDTH(TAGLEN)) CacheTagMem(.clk, .ce(CacheEn),
+  ram1p1rwe #(.P(P), .DEPTH(NUMLINES), .WIDTH(TAGLEN)) CacheTagMem(.clk, .ce(CacheEn),
     .addr(CacheSet), .dout(ReadTag),
     .din(PAdr[PA_BITS-1:OFFSETLEN+INDEXLEN]), .we(SetValidEN));
 
@@ -131,12 +131,12 @@ module openhw_cacheway import cvw::*; #(parameter cvw_t P,
   
   for(words = 0; words < NUMSRAM; words++) begin: word
     if (!READ_ONLY_CACHE) begin:wordram
-      openhw_ram1p1rwbe #(.P(P), .DEPTH(NUMLINES), .WIDTH(SRAMLEN)) CacheDataMem(.clk, .ce(CacheEn), .addr(CacheSet),
+      ram1p1rwbe #(.P(P), .DEPTH(NUMLINES), .WIDTH(SRAMLEN)) CacheDataMem(.clk, .ce(CacheEn), .addr(CacheSet),
       .dout(ReadDataLine[SRAMLEN*(words+1)-1:SRAMLEN*words]),
       .din(LineWriteData[SRAMLEN*(words+1)-1:SRAMLEN*words]),
       .we(SelectedWriteWordEn), .bwe(FinalByteMask[SRAMLENINBYTES*(words+1)-1:SRAMLENINBYTES*words]));
     end else begin:wordram // no byte-enable needed for i$.
-      openhw_ram1p1rwe #(.P(P), .DEPTH(NUMLINES), .WIDTH(SRAMLEN)) CacheDataMem(.clk, .ce(CacheEn), .addr(CacheSet),
+      ram1p1rwe #(.P(P), .DEPTH(NUMLINES), .WIDTH(SRAMLEN)) CacheDataMem(.clk, .ce(CacheEn), .addr(CacheSet),
       .dout(ReadDataLine[SRAMLEN*(words+1)-1:SRAMLEN*words]),
       .din(LineWriteData[SRAMLEN*(words+1)-1:SRAMLEN*words]),
       .we(SelectedWriteWordEn));

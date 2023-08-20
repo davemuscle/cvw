@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_flopenl #(parameter WIDTH = 8, parameter type TYPE=logic [WIDTH-1:0]) (
+module flopenl #(parameter WIDTH = 8, parameter type TYPE=logic [WIDTH-1:0]) (
   input  logic clk, load, en,
   input  TYPE d,
   input  TYPE val,

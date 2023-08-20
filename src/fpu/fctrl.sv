@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fctrl import cvw::*;  #(parameter cvw_t P) (
+module fctrl import cvw::*;  #(parameter cvw_t P) (
   input  logic                 clk,
   input  logic                 reset,
   // input control signals
@@ -309,19 +309,19 @@ module openhw_fctrl import cvw::*;  #(parameter cvw_t P) (
   assign Adr3D = InstrD[31:27];
  
   // D/E pipleine register
-  openhw_flopenrc #(14+P.FMTBITS) DECtrlReg3(clk, reset, FlushE, ~StallE, 
+  flopenrc #(14+P.FMTBITS) DECtrlReg3(clk, reset, FlushE, ~StallE, 
               {FRegWriteD, PostProcSelD, FResSelD, FrmD, FmtD, OpCtrlD, FWriteIntD, FCvtIntD, ~IllegalFPUInstrD},
               {FRegWriteE, PostProcSelE, FResSelE, FrmE, FmtE, OpCtrlE, FWriteIntE, FCvtIntE, FPUActiveE});
-  openhw_flopenrc #(15) DEAdrReg(clk, reset, FlushE, ~StallE, {Adr1D, Adr2D, Adr3D}, {Adr1E, Adr2E, Adr3E});
-  openhw_flopenrc #(1) DEFDivStartReg(clk, reset, FlushE, ~StallE|FDivBusyE, FDivStartD, FDivStartE);
-  openhw_flopenrc #(3) DEEnReg(clk, reset, FlushE, ~StallE, {XEnD, YEnD, ZEnD}, {XEnE, YEnE, ZEnE});
+  flopenrc #(15) DEAdrReg(clk, reset, FlushE, ~StallE, {Adr1D, Adr2D, Adr3D}, {Adr1E, Adr2E, Adr3E});
+  flopenrc #(1) DEFDivStartReg(clk, reset, FlushE, ~StallE|FDivBusyE, FDivStartD, FDivStartE);
+  flopenrc #(3) DEEnReg(clk, reset, FlushE, ~StallE, {XEnD, YEnD, ZEnD}, {XEnE, YEnE, ZEnE});
 
   // Integer division on FPU divider
   if (P.M_SUPPORTED & P.IDIV_ON_FPU) assign IDivStartE = IntDivE;
   else                               assign IDivStartE = 0; 
 
   // E/M pipleine register
-  openhw_flopenrc #(13+int'(P.FMTBITS)) EMCtrlReg (clk, reset, FlushM, ~StallM,
+  flopenrc #(13+int'(P.FMTBITS)) EMCtrlReg (clk, reset, FlushM, ~StallM,
               {FRegWriteE, FResSelE, PostProcSelE, FrmE, FmtE, OpCtrlE, FWriteIntE, FCvtIntE},
               {FRegWriteM, FResSelM, PostProcSelM, FrmM, FmtM, OpCtrlM, FWriteIntM, FCvtIntM});
   
@@ -329,7 +329,7 @@ module openhw_fctrl import cvw::*;  #(parameter cvw_t P) (
   assign FpLoadStoreM = FResSelM[1];
 
   // M/W pipleine register
-  openhw_flopenrc #(4)  MWCtrlReg(clk, reset, FlushW, ~StallW,
+  flopenrc #(4)  MWCtrlReg(clk, reset, FlushW, ~StallW,
           {FRegWriteM, FResSelM, FCvtIntM},
           {FRegWriteW, FResSelW, FCvtIntW});
  

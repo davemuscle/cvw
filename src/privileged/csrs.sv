@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_csrs import cvw::*;  #(parameter cvw_t P) (
+module csrs import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset, 
   input  logic              CSRSWriteM, STrapM,
   input  logic [11:0]       CSRAdrM,
@@ -95,22 +95,22 @@ module openhw_csrs import cvw::*;  #(parameter cvw_t P) (
   assign WriteSTIMECMPHM  = CSRSWriteM & (CSRAdrM == STIMECMPH) & STCE & (P.XLEN == 32);
 
   // CSRs
-  openhw_flopenr #(P.XLEN) STVECreg(clk, reset, WriteSTVECM, {CSRWriteValM[P.XLEN-1:2], 1'b0, CSRWriteValM[0]}, STVEC_REGW); 
-  openhw_flopenr #(P.XLEN) SSCRATCHreg(clk, reset, WriteSSCRATCHM, CSRWriteValM, SSCRATCH_REGW);
-  openhw_flopenr #(P.XLEN) SEPCreg(clk, reset, WriteSEPCM, NextEPCM, SEPC_REGW); 
-  openhw_flopenr #(P.XLEN) SCAUSEreg(clk, reset, WriteSCAUSEM, {NextCauseM[4], {(P.XLEN-5){1'b0}}, NextCauseM[3:0]}, SCAUSE_REGW);
-  openhw_flopenr #(P.XLEN) STVALreg(clk, reset, WriteSTVALM, NextMtvalM, STVAL_REGW);
+  flopenr #(P.XLEN) STVECreg(clk, reset, WriteSTVECM, {CSRWriteValM[P.XLEN-1:2], 1'b0, CSRWriteValM[0]}, STVEC_REGW); 
+  flopenr #(P.XLEN) SSCRATCHreg(clk, reset, WriteSSCRATCHM, CSRWriteValM, SSCRATCH_REGW);
+  flopenr #(P.XLEN) SEPCreg(clk, reset, WriteSEPCM, NextEPCM, SEPC_REGW); 
+  flopenr #(P.XLEN) SCAUSEreg(clk, reset, WriteSCAUSEM, {NextCauseM[4], {(P.XLEN-5){1'b0}}, NextCauseM[3:0]}, SCAUSE_REGW);
+  flopenr #(P.XLEN) STVALreg(clk, reset, WriteSTVALM, NextMtvalM, STVAL_REGW);
   if (P.VIRTMEM_SUPPORTED)
-    openhw_flopenr #(P.XLEN) SATPreg(clk, reset, WriteSATPM, CSRWriteValM, SATP_REGW);
+    flopenr #(P.XLEN) SATPreg(clk, reset, WriteSATPM, CSRWriteValM, SATP_REGW);
   else
     assign SATP_REGW = 0; // hardwire to zero if virtual memory not supported
-  openhw_flopenr #(32)   SCOUNTERENreg(clk, reset, WriteSCOUNTERENM, CSRWriteValM[31:0], SCOUNTEREN_REGW);
+  flopenr #(32)   SCOUNTERENreg(clk, reset, WriteSCOUNTERENM, CSRWriteValM[31:0], SCOUNTEREN_REGW);
   if (P.SSTC_SUPPORTED) begin : sstc
     if (P.XLEN == 64) begin : sstc64
-      openhw_flopenl #(P.XLEN) STIMECMPreg(clk, reset, WriteSTIMECMPM, CSRWriteValM, 64'hFFFFFFFFFFFFFFFF, STIMECMP_REGW);
+      flopenl #(P.XLEN) STIMECMPreg(clk, reset, WriteSTIMECMPM, CSRWriteValM, 64'hFFFFFFFFFFFFFFFF, STIMECMP_REGW);
     end else begin : sstc32
-      openhw_flopenl #(P.XLEN) STIMECMPreg(clk, reset, WriteSTIMECMPM, CSRWriteValM, 32'hFFFFFFFF, STIMECMP_REGW[31:0]);
-      openhw_flopenl #(P.XLEN) STIMECMPHreg(clk, reset, WriteSTIMECMPHM, CSRWriteValM, 32'hFFFFFFFF, STIMECMP_REGW[63:32]);
+      flopenl #(P.XLEN) STIMECMPreg(clk, reset, WriteSTIMECMPM, CSRWriteValM, 32'hFFFFFFFF, STIMECMP_REGW[31:0]);
+      flopenl #(P.XLEN) STIMECMPHreg(clk, reset, WriteSTIMECMPHM, CSRWriteValM, 32'hFFFFFFFF, STIMECMP_REGW[63:32]);
     end
   end else assign STIMECMP_REGW = 0;
 
@@ -129,7 +129,7 @@ module openhw_csrs import cvw::*;  #(parameter cvw_t P) (
     CSRWriteValM[0]   & P.VIRTMEM_SUPPORTED
   };
 
-  openhw_flopenr #(P.XLEN) SENVCFGreg(clk, reset, WriteSENVCFGM, SENVCFG_WriteValM, SENVCFG_REGW);
+  flopenr #(P.XLEN) SENVCFGreg(clk, reset, WriteSENVCFGM, SENVCFG_WriteValM, SENVCFG_REGW);
     
   // CSR Reads
   always_comb begin:csrr

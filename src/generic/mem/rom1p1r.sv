@@ -25,7 +25,7 @@
 
 // This model actually works correctly with vivado.
 
-module openhw_rom1p1r #(parameter ADDR_WIDTH = 8,
+module rom1p1r #(parameter ADDR_WIDTH = 8,
      parameter DATA_WIDTH = 32, 
      parameter PRELOAD_ENABLED = 0)
   (input  logic                  clk,
@@ -37,10 +37,10 @@ module openhw_rom1p1r #(parameter ADDR_WIDTH = 8,
    // Core Memory
    logic [DATA_WIDTH-1:0]    ROM [(2**ADDR_WIDTH)-1:0];
 /*   if ((`USE_SRAM == 1) & (ADDR_WDITH == 7) & (DATA_WIDTH == 64)) begin
-      openhw_rom1p1r_128x64 rom1 (.CLK(clk), .CEB(~ce), .A(addr[6:0]), .Q(dout));
+      rom1p1r_128x64 rom1 (.CLK(clk), .CEB(~ce), .A(addr[6:0]), .Q(dout));
 
    end if ((`USE_SRAM == 1) & (ADDR_WDITH == 7) & (DATA_WIDTH == 32)) begin
-      openhw_rom1p1r_128x32 rom1 (.CLK(clk), .CEB(~ce), .A(addr[6:0]), .Q(dout));      
+      rom1p1r_128x32 rom1 (.CLK(clk), .CEB(~ce), .A(addr[6:0]), .Q(dout));      
 
    end else begin */
    always @ (posedge clk) begin

@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_unpack import cvw::*;  #(parameter cvw_t P) (
+module unpack import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.FLEN-1:0]       X, Y, Z,              // inputs from register file
   input  logic [P.FMTBITS-1:0]    Fmt,                  // format signal 00 - single 01 - double 11 - quad 10 - half
   input  logic                    XEn, YEn, ZEn,        // input enables
@@ -47,17 +47,17 @@ module openhw_unpack import cvw::*;  #(parameter cvw_t P) (
   logic XFracZero, YFracZero, ZFracZero;                // is the fraction zero
   logic YExpMax, ZExpMax;                               // is the exponent all 1s
   
-  openhw_unpackinput #(P) unpackinputX (.A(X), .Fmt, .Sgn(Xs), .Exp(Xe), .Man(Xm), .En(XEn), .FPUActive,
+  unpackinput #(P) unpackinputX (.A(X), .Fmt, .Sgn(Xs), .Exp(Xe), .Man(Xm), .En(XEn), .FPUActive,
                           .NaN(XNaN), .SNaN(XSNaN), .ExpNonZero(XExpNonZero),
                           .Zero(XZero), .Inf(XInf), .ExpMax(XExpMax), .FracZero(XFracZero), 
                           .Subnorm(XSubnorm), .PostBox(XPostBox));
 
-  openhw_unpackinput #(P) unpackinputY (.A(Y), .Fmt, .Sgn(Ys), .Exp(Ye), .Man(Ym), .En(YEn), .FPUActive,
+  unpackinput #(P) unpackinputY (.A(Y), .Fmt, .Sgn(Ys), .Exp(Ye), .Man(Ym), .En(YEn), .FPUActive,
                           .NaN(YNaN), .SNaN(YSNaN), .ExpNonZero(YExpNonZero),
                           .Zero(YZero), .Inf(YInf), .ExpMax(YExpMax), .FracZero(YFracZero), 
                           .Subnorm(), .PostBox());
 
-  openhw_unpackinput #(P) unpackinputZ (.A(Z), .Fmt, .Sgn(Zs), .Exp(Ze), .Man(Zm), .En(ZEn), .FPUActive,
+  unpackinput #(P) unpackinputZ (.A(Z), .Fmt, .Sgn(Zs), .Exp(Ze), .Man(Zm), .En(ZEn), .FPUActive,
                           .NaN(ZNaN), .SNaN(ZSNaN), .ExpNonZero(ZExpNonZero),
                           .Zero(ZZero), .Inf(ZInf), .ExpMax(ZExpMax), .FracZero(ZFracZero), 
                           .Subnorm(), .PostBox());

@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_subwordwrite #(parameter LLEN) (
+module subwordwrite #(parameter LLEN) (
   input logic  [2:0]        LSUFunct3M,
   input logic  [LLEN-1:0]   IMAFWriteDataM,
   output logic [LLEN-1:0]   LittleEndianWriteDataM

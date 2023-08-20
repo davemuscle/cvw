@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fma import cvw::*;  #(parameter cvw_t P) (
+module fma import cvw::*;  #(parameter cvw_t P) (
   input  logic                         Xs, Ys, Zs,             // input's signs
   input  logic [P.NE-1:0]              Xe, Ye, Ze,             // input's biased exponents in B(NE.0) format
   input  logic [P.NF:0]                Xm, Ym, Zm,             // input's significands in U(0.NF) format
@@ -68,26 +68,26 @@ module openhw_fma import cvw::*;  #(parameter cvw_t P) (
   ///////////////////////////////////////////////////////////////////////////////
   
   // calculate the product's exponent 
-  openhw_fmaexpadd #(P) expadd(.Xe, .Ye, .XZero, .YZero, .Pe);
+  fmaexpadd #(P) expadd(.Xe, .Ye, .XZero, .YZero, .Pe);
 
   // multiplication of the mantissa's
-  openhw_fmamult #(P) mult(.Xm, .Ym, .Pm);
+  fmamult #(P) mult(.Xm, .Ym, .Pm);
   
   // calculate the signs and take the opperation into account
-  openhw_fmasign sign(.OpCtrl, .Xs, .Ys, .Zs, .Ps, .As, .InvA);
+  fmasign sign(.OpCtrl, .Xs, .Ys, .Zs, .Ps, .As, .InvA);
 
   ///////////////////////////////////////////////////////////////////////////////
   // Alignment shifter
   ///////////////////////////////////////////////////////////////////////////////
   
-  openhw_fmaalign #(P) align(.Ze, .Zm, .XZero, .YZero, .ZZero, .Xe, .Ye, .Am, .ASticky, .KillProd);
+  fmaalign #(P) align(.Ze, .Zm, .XZero, .YZero, .ZZero, .Xe, .Ye, .Am, .ASticky, .KillProd);
                       
   // ///////////////////////////////////////////////////////////////////////////////
   // // Addition/LZA
   // ///////////////////////////////////////////////////////////////////////////////
       
-  openhw_fmaadd #(P) add(.Am, .Pm, .Ze, .Pe, .Ps, .KillProd, .ASticky, .AmInv, .PmKilled, .InvA, .Sm, .Se, .Ss);
+  fmaadd #(P) add(.Am, .Pm, .Ze, .Pe, .Ps, .KillProd, .ASticky, .AmInv, .PmKilled, .InvA, .Sm, .Se, .Ss);
 
-  openhw_fmalza #(3*P.NF+4, P.NF) lza(.A(AmInv), .Pm(PmKilled), .Cin(InvA & (~ASticky | KillProd)), .sub(InvA), .SCnt);
+  fmalza #(3*P.NF+4, P.NF) lza(.A(AmInv), .Pm(PmKilled), .Cin(InvA & (~ASticky | KillProd)), .sub(InvA), .SCnt);
   
 endmodule

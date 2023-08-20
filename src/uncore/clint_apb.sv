@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_clint_apb import cvw::*;  #(parameter cvw_t P) (
+module clint_apb import cvw::*;  #(parameter cvw_t P) (
   input  logic                PCLK, PRESETn,
   input  logic                PSEL,
   input  logic [15:0]         PADDR, 
@@ -149,7 +149,7 @@ module openhw_clint_apb import cvw::*;  #(parameter cvw_t P) (
 
 endmodule
 
-module openhw_timeregsync  import cvw::*;  #(parameter cvw_t P) (
+module timeregsync  import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, resetn, 
   input  logic              we0, we1,
   input  logic [P.XLEN-1:0] wd,
@@ -168,7 +168,7 @@ module openhw_timeregsync  import cvw::*;  #(parameter cvw_t P) (
       else          q <= q + 1;
 endmodule
 
-module openhw_timereg  import cvw::*;  #(parameter cvw_t P) (
+module timereg  import cvw::*;  #(parameter cvw_t P) (
   input  logic              PCLK, PRESETn, TIMECLK,
   input  logic              we0, we1,
   input  logic [P.XLEN-1:0] PWDATA,
@@ -214,16 +214,16 @@ module openhw_timereg  import cvw::*;  #(parameter cvw_t P) (
     // synchronize the acknowledge back to the PCLK domain to indicate the request was handled and can be lowered
     sync async(PCLK, req_sync, ack);
 
-    openhw_timeregsync #(P) timeregsync(.clk(TIMECLK), .resetn(resetn_sync), .we0(we0_stored), .we1(we1_stored), .wd(wd_stored), .q(time_int));
-    openhw_binarytogray b2g(time_int, time_int_gc);
-    openhw_flop gcreg(TIMECLK, time_int_gc, time_gc);
+    timeregsync #(P) timeregsync(.clk(TIMECLK), .resetn(resetn_sync), .we0(we0_stored), .we1(we1_stored), .wd(wd_stored), .q(time_int));
+    binarytogray b2g(time_int, time_int_gc);
+    flop gcreg(TIMECLK, time_int_gc, time_gc);
 
     sync timesync[63:0](PCLK, time_gc, MTIME_GC); 
-    openhw_graytobinary g2b(MTIME_GC, MTIME);
+    graytobinary g2b(MTIME_GC, MTIME);
   end
 endmodule
 
-module openhw_binarytogray #(parameter N) (
+module binarytogray #(parameter N) (
   input  logic [N-1:0] b,
   output logic [N-1:0] g);
 
@@ -232,7 +232,7 @@ module openhw_binarytogray #(parameter N) (
   assign g = b ^ {1'b0, b[N-1:1]};
 endmodule
 
-module openhw_graytobinary #(parameter N) (
+module graytobinary #(parameter N) (
   input  logic [N-1:0] g,
   output logic [N-1:0] b);
 

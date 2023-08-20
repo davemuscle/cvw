@@ -30,7 +30,7 @@
 
 // WIDTH is number of bits in one "word" of the memory, DEPTH is number of such words
 
-module openhw_ram1p1rwe import cvw::* ; #(parameter cvw_t P,
+module ram1p1rwe import cvw::* ; #(parameter cvw_t P,
                    parameter DEPTH=64, WIDTH=44) (
   input logic                     clk,
   input logic                     ce,
@@ -47,19 +47,19 @@ module openhw_ram1p1rwe import cvw::* ; #(parameter cvw_t P,
   // ***************************************************************************
   if ((P.USE_SRAM == 1) & (WIDTH == 128) & (DEPTH == 64)) begin // Cache data subarray
     // 64 x 128-bit SRAM
-    openhw_ram1p1rwbe_64x128 sram1A (.CLK(clk), .CEB(~ce), .WEB(~we),
+    ram1p1rwbe_64x128 sram1A (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB('0), .Q(dout));
     
   end else if ((P.USE_SRAM == 1) & (WIDTH == 44)  & (DEPTH == 64)) begin // RV64 cache tag
     // 64 x 44-bit SRAM
-    openhw_ram1p1rwbe_64x44 sram1B (.CLK(clk), .CEB(~ce), .WEB(~we),
+    ram1p1rwbe_64x44 sram1B (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB('0), .Q(dout));
 
   end else if ((P.USE_SRAM == 1) & (WIDTH == 22)  & (DEPTH == 64)) begin // RV32 cache tag
     // 64 x 22-bit SRAM
-    openhw_ram1p1rwbe_64x22 sram1 (.CLK(clk), .CEB(~ce), .WEB(~we),
+    ram1p1rwbe_64x22 sram1 (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB('0), .Q(dout));     
     
@@ -73,7 +73,7 @@ module openhw_ram1p1rwe import cvw::* ; #(parameter cvw_t P,
 
     // Read
     logic [$clog2(DEPTH)-1:0] addrd;
-    openhw_flopen #($clog2(DEPTH)) adrreg(clk, ce, addr, addrd);
+    flopen #($clog2(DEPTH)) adrreg(clk, ce, addr, addrd);
     assign dout = RAM[addrd];
 
     /*      // Read

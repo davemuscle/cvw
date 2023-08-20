@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fdivsqrtqsel4cmp (
+module fdivsqrtqsel4cmp (
   input  logic [2:0] Dmsbs,
   input  logic [4:0] Smsbs,
   input  logic [7:0] WSmsbs, WCmsbs,

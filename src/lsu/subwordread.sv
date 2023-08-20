@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_subwordread #(parameter LLEN) 
+module subwordread #(parameter LLEN) 
   (
    input logic [LLEN-1:0]   ReadDataWordMuxM,
    input logic [2:0]        PAdrM,

@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_fdivsqrtfgen4 import cvw::*;  #(parameter cvw_t P) (
+module fdivsqrtfgen4 import cvw::*;  #(parameter cvw_t P) (
   input  logic [3:0]        udigit,
   input  logic [P.DIVb+3:0] C, U, UM,
   output logic [P.DIVb+3:0] F

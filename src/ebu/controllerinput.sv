@@ -31,7 +31,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_controllerinput #(
+module controllerinput #(
   parameter PA_BITS, 
   parameter SAVE_ENABLED = 1           // 1: Save manager inputs if Save = 1, 0: Don't save inputs
 )(
@@ -64,10 +64,10 @@ module openhw_controllerinput #(
   logic [PA_BITS-1:0]         HADDRSave;
 
   if (SAVE_ENABLED) begin
-    openhw_flopenr #(1+3+3+2+PA_BITS) SaveReg(HCLK, ~HRESETn, Save,
+    flopenr #(1+3+3+2+PA_BITS) SaveReg(HCLK, ~HRESETn, Save,
       {HWRITEIn, HSIZEIn, HBURSTIn, HTRANSIn, HADDRIn}, 
       {HWRITESave, HSIZESave, HBURSTSave, HTRANSSave, HADDRSave});
-    openhw_mux2 #(1+3+3+2+PA_BITS) RestorMux({HWRITEIn, HSIZEIn, HBURSTIn, HTRANSIn, HADDRIn}, 
+    mux2 #(1+3+3+2+PA_BITS) RestorMux({HWRITEIn, HSIZEIn, HBURSTIn, HTRANSIn, HADDRIn}, 
       {HWRITESave, HSIZESave, HBURSTSave, HTRANSSave, HADDRSave},
       Restore,
       {HWRITEOut, HSIZEOut, HBURSTOut, HTRANSOut, HADDROut});

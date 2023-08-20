@@ -31,7 +31,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_ebu #(parameter XLEN, PA_BITS, AHBW)(
+module ebu #(parameter XLEN, PA_BITS, AHBW)(
   input  logic                clk, reset,
   // Signals from IFU
   input  logic [1:0]          IFUHTRANS, // IFU AHB transaction request
@@ -96,14 +96,14 @@ module openhw_ebu #(parameter XLEN, PA_BITS, AHBW)(
   // input stages and muxing for IFU and LSU
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  openhw_controllerinput #(PA_BITS) IFUInput(.HCLK, .HRESETn, .Save(IFUSave), .Restore(IFURestore), .Disable(IFUDisable),
+  controllerinput #(PA_BITS) IFUInput(.HCLK, .HRESETn, .Save(IFUSave), .Restore(IFURestore), .Disable(IFUDisable),
     .Request(IFUReq),
     .HWRITEIn(1'b0), .HSIZEIn(IFUHSIZE), .HBURSTIn(IFUHBURST), .HTRANSIn(IFUHTRANS), .HADDRIn(IFUHADDR),
     .HWRITEOut(IFUHWRITEOut), .HSIZEOut(IFUHSIZEOut), .HBURSTOut(IFUHBURSTOut), .HREADYOut(IFUHREADY),
     .HTRANSOut(IFUHTRANSOut), .HADDROut(IFUHADDROut), .HREADYIn(HREADY));
 
   // LSU always has priority so there should never be a need to save and restore the address phase inputs.
-  openhw_controllerinput #(PA_BITS, 0) LSUInput(.HCLK, .HRESETn, .Save(1'b0), .Restore(1'b0), .Disable(LSUDisable),
+  controllerinput #(PA_BITS, 0) LSUInput(.HCLK, .HRESETn, .Save(1'b0), .Restore(1'b0), .Disable(LSUDisable),
     .Request(LSUReq),
     .HWRITEIn(LSUHWRITE), .HSIZEIn(LSUHSIZE), .HBURSTIn(LSUHBURST), .HTRANSIn(LSUHTRANS), .HADDRIn(LSUHADDR), .HREADYOut(LSUHREADY),
     .HWRITEOut(LSUHWRITEOut), .HSIZEOut(LSUHSIZEOut), .HBURSTOut(LSUHBURSTOut),
@@ -123,7 +123,7 @@ module openhw_ebu #(parameter XLEN, PA_BITS, AHBW)(
   assign HWSTRB = LSUHWSTRB;
   // HRDATA is sent to all controllers at the core level.
 
-  openhw_ebufsmarb ebufsmarb(.HCLK, .HRESETn, .HBURST, .HREADY, .LSUReq, .IFUReq, .IFUSave,
+  ebufsmarb ebufsmarb(.HCLK, .HRESETn, .HBURST, .HREADY, .LSUReq, .IFUReq, .IFUSave,
           .IFURestore, .IFUDisable, .IFUSelect, .LSUDisable, .LSUSelect);
   
 endmodule

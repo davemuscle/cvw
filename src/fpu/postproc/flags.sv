@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_flags import cvw::*;  #(parameter cvw_t P) (
+module flags import cvw::*;  #(parameter cvw_t P) (
   input  logic                 Xs,                     // X sign
   input  logic [P.FMTBITS-1:0] OutFmt,                 // output format
   input  logic                 InfIn,                  // is a Inf input being used

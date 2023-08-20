@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_csri import cvw::*;  #(parameter cvw_t P) (
+module csri import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset, 
   input  logic              CSRMWriteM, CSRSWriteM,
   input  logic [P.XLEN-1:0] CSRWriteValM,

@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_div import cvw::*;  #(parameter cvw_t P) (
+module div import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk,
   input  logic              reset,
   input  logic              StallM,
@@ -70,8 +70,8 @@ module openhw_div import cvw::*;  #(parameter cvw_t P) (
 
   // Handle sign extension for W-type instructions
   if (P.XLEN == 64) begin:rv64 // RV64 has W-type instructions
-    openhw_mux2 #(P.XLEN) xinmux(ForwardedSrcAE, {ForwardedSrcAE[31:0], 32'b0}, W64E, XinE);
-    openhw_mux2 #(P.XLEN) dinmux(ForwardedSrcBE, {{32{ForwardedSrcBE[31]&DivSignedE}}, ForwardedSrcBE[31:0]}, W64E, DinE);
+    mux2 #(P.XLEN) xinmux(ForwardedSrcAE, {ForwardedSrcAE[31:0], 32'b0}, W64E, XinE);
+    mux2 #(P.XLEN) dinmux(ForwardedSrcBE, {{32{ForwardedSrcBE[31]&DivSignedE}}, ForwardedSrcBE[31:0]}, W64E, DinE);
   end else begin // RV32 has no W-type instructions
     assign XinE = ForwardedSrcAE;
     assign DinE = ForwardedSrcBE;      
@@ -84,9 +84,9 @@ module openhw_div import cvw::*;  #(parameter cvw_t P) (
   assign Div0E = (DinE == 0);
 
   // Take absolute value for signed operations, and negate D to handle subtraction in divider stages
-  openhw_neg #(P.XLEN) negd(DinE, DnE);
+  neg #(P.XLEN) negd(DinE, DnE);
   mux2 #(P.XLEN) dabsmux(DnE, DinE, SignDE, DAbsBE);  // take absolute value for signed operations, and negate for subtraction setp
-  openhw_neg #(P.XLEN) negx(XinE, XnE);
+  neg #(P.XLEN) negx(XinE, XnE);
   mux3 #(P.XLEN) xabsmux(XinE, XnE, ForwardedSrcAE, {Div0E, SignXE}, XInitE);  // take absolute value for signed operations, or keep original value for divide by 0
 
   //////////////////////////////
@@ -94,28 +94,28 @@ module openhw_div import cvw::*;  #(parameter cvw_t P) (
   //////////////////////////////
 
   // initialization multiplexers on first cycle of operation
-  openhw_mux2 #(P.XLEN) wmux(W[P.IDIV_BITSPERCYCLE], {P.XLEN{1'b0}}, DivStartE, WNext);
-  openhw_mux2 #(P.XLEN) xmux(XQ[P.IDIV_BITSPERCYCLE], XInitE, DivStartE, XQNext);
+  mux2 #(P.XLEN) wmux(W[P.IDIV_BITSPERCYCLE], {P.XLEN{1'b0}}, DivStartE, WNext);
+  mux2 #(P.XLEN) xmux(XQ[P.IDIV_BITSPERCYCLE], XInitE, DivStartE, XQNext);
 
   // registers before division steps
-  openhw_flopen #(P.XLEN) wreg(clk, DivBusyE, WNext, W[0]); 
-  openhw_flopen #(P.XLEN) xreg(clk, DivBusyE, XQNext, XQ[0]);
-  openhw_flopen #(P.XLEN) dabsreg(clk, DivStartE, DAbsBE, DAbsB);
+  flopen #(P.XLEN) wreg(clk, DivBusyE, WNext, W[0]); 
+  flopen #(P.XLEN) xreg(clk, DivBusyE, XQNext, XQ[0]);
+  flopen #(P.XLEN) dabsreg(clk, DivStartE, DAbsBE, DAbsB);
 
   // one copy of divstep for each bit produced per cycle
   genvar i;
   for (i=0; i<P.IDIV_BITSPERCYCLE; i = i+1)
-    openhw_divstep #(P.XLEN) divstep(W[i], XQ[i], DAbsB, W[i+1], XQ[i+1]);
+    divstep #(P.XLEN) divstep(W[i], XQ[i], DAbsB, W[i+1], XQ[i+1]);
 
   //////////////////////////////
   // Memory Stage: output sign correction and special cases
   //////////////////////////////
 
-  openhw_flopen #(3) Div0eMReg(clk, DivStartE, {Div0E, NegQE, SignXE}, {Div0M, NegQM, NegWM});
+  flopen #(3) Div0eMReg(clk, DivStartE, {Div0E, NegQE, SignXE}, {Div0M, NegQM, NegWM});
   
   // On final setp of signed operations, negate outputs as needed to get correct sign
-  openhw_neg #(P.XLEN) qneg(XQ[0], XQnM);
-  openhw_neg #(P.XLEN) wneg(W[0], WnM);
+  neg #(P.XLEN) qneg(XQ[0], XQnM);
+  neg #(P.XLEN) wneg(W[0], WnM);
   // Select appropriate output: normal, negated, or for divide by zero
   mux3 #(P.XLEN) qmux(XQ[0], XQnM, {P.XLEN{1'b1}}, {Div0M, NegQM}, QuotM); // Q taken from XQ register, negated if necessary, or all 1s when dividing by zero
   mux3 #(P.XLEN) remmux(W[0], WnM, XQ[0], {Div0M, NegWM}, RemM); // REM taken from W register, negated if necessary, or from X when dividing by zero

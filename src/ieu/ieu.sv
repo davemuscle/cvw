@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_ieu import cvw::*;  #(parameter cvw_t P) (
+module ieu import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset,
   // Decode stage signals
   input  logic [31:0]       InstrD,                          // Instruction
@@ -101,7 +101,7 @@ module openhw_ieu import cvw::*;  #(parameter cvw_t P) (
   logic       MDUE;                                          // Multiply/divide instruction
   logic       BMUActiveE;                                    // Bit manipulation instruction being executed
            
-  openhw_controller #(P) c(
+  controller #(P) c(
     .clk, .reset, .StallD, .FlushD, .InstrD, .STATUS_FS, .ENVCFG_CBE, .ImmSrcD,
     .IllegalIEUFPUInstrD, .IllegalBaseInstrD, .StallE, .FlushE, .FlagsE, .FWriteIntE,
     .PCSrcE, .ALUSrcAE, .ALUSrcBE, .ALUResultSrcE, .ALUSelectE, .MemReadE, .CSRReadE, 
@@ -111,7 +111,7 @@ module openhw_ieu import cvw::*;  #(parameter cvw_t P) (
     .RegWriteM, .FlushDCacheM, .InstrValidM, .InstrValidE, .InstrValidD, .FWriteIntM,
     .StallW, .FlushW, .RegWriteW, .IntDivW, .ResultSrcW, .CSRWriteFenceM, .InvalidateICacheM, .StoreStallD);
 
-  openhw_datapath #(P) dp(
+  datapath #(P) dp(
     .clk, .reset, .ImmSrcD, .InstrD, .StallE, .FlushE, .ForwardAE, .ForwardBE, .W64E, .SubArithE,
     .Funct3E, .ALUSrcAE, .ALUSrcBE, .ALUResultSrcE, .ALUSelectE, .JumpE, .BranchSignedE, 
     .PCE, .PCLinkE, .FlagsE, .IEUAdrE, .ForwardedSrcAE, .ForwardedSrcBE, .BSelectE, .ZBBSelectE, .BALUControlE, .BMUActiveE,
@@ -119,7 +119,7 @@ module openhw_ieu import cvw::*;  #(parameter cvw_t P) (
     .StallW, .FlushW, .RegWriteW, .IntDivW, .SquashSCW, .ResultSrcW, .ReadDataW, .FCvtIntResW,
     .CSRReadValW, .MDUResultW, .FIntDivResultW, .Rs1D, .Rs2D, .Rs1E, .Rs2E, .RdE, .RdM, .RdW);             
   
-  openhw_forward    fw(
+  forward    fw(
     .Rs1D, .Rs2D, .Rs1E, .Rs2E, .RdE, .RdM, .RdW,
     .MemReadE, .MDUE, .CSRReadE, .RegWriteM, .RegWriteW,
     .FCvtIntE, .SCE, .ForwardAE, .ForwardBE,

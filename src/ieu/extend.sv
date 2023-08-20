@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_extend import cvw::*;  #(parameter cvw_t P) (
+module extend import cvw::*;  #(parameter cvw_t P) (
   input  logic [31:7]       InstrD,       // All instruction bits except opcode (lower 7 bits)
   input  logic [2:0]        ImmSrcD,      // Select what kind of extension to perform
   output logic [P.XLEN-1:0] ImmExtD);     // Extended immediate

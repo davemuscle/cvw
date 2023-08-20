@@ -31,7 +31,7 @@
 
 // WIDTH is number of bits in one "word" of the memory, DEPTH is number of such words
 
-module openhw_ram2p1r1wbe import cvw::*; #(parameter cvw_t P,
+module ram2p1r1wbe import cvw::*; #(parameter cvw_t P,
                                     parameter DEPTH=1024, WIDTH=68) (
   input  logic                     clk,
   input  logic                     ce1, ce2,
@@ -53,7 +53,7 @@ module openhw_ram2p1r1wbe import cvw::*; #(parameter cvw_t P,
 
   if ((P.USE_SRAM == 1) & (WIDTH == 68) & (DEPTH == 1024)) begin
     
-    openhw_ram2p1r1wbe_1024x68 memory1(.CLKA(clk), .CLKB(clk), 
+    ram2p1r1wbe_1024x68 memory1(.CLKA(clk), .CLKB(clk), 
       .CEBA(~ce1), .CEBB(~ce2),
       .WEBA('0), .WEBB(~we2),            
       .AA(ra1), .AB(wa2),
@@ -65,7 +65,7 @@ module openhw_ram2p1r1wbe import cvw::*; #(parameter cvw_t P,
 
   end else if ((P.USE_SRAM == 1) & (WIDTH == 36) & (DEPTH == 1024)) begin
     
-    openhw_ram2p1r1wbe_1024x36 memory1(.CLKA(clk), .CLKB(clk), 
+    ram2p1r1wbe_1024x36 memory1(.CLKA(clk), .CLKB(clk), 
       .CEBA(~ce1), .CEBB(~ce2),
       .WEBA('0), .WEBB(~we2),            
       .AA(ra1), .AB(wa2),
@@ -84,16 +84,16 @@ module openhw_ram2p1r1wbe import cvw::*; #(parameter cvw_t P,
     logic [SRAMWIDTH-1:0]     SRAMBitMask;      
     logic [$clog2(DEPTH)-1:0] RA1Q;
     
-    openhw_onehotdecoder #($clog2(SRAMNUMSETS)) oh1(wa2[$clog2(SRAMNUMSETS)-1:0], SRAMBitMaskPre);      
+    onehotdecoder #($clog2(SRAMNUMSETS)) oh1(wa2[$clog2(SRAMNUMSETS)-1:0], SRAMBitMaskPre);      
     genvar                    index;
     for (index = 0; index < SRAMNUMSETS; index++) begin:readdatalinesetsmux
       assign RD1Sets[index] = SRAMReadData[(index*WIDTH)+WIDTH-1 : (index*WIDTH)];   
       assign SRAMWriteData[index*2+1:index*2] = wd2;
       assign SRAMBitMask[index*2+1:index*2] = {2{SRAMBitMaskPre[index]}};      
     end
-    openhw_flopen #($clog2(DEPTH)) mem_reg1 (clk, ce1, ra1, RA1Q);      
+    flopen #($clog2(DEPTH)) mem_reg1 (clk, ce1, ra1, RA1Q);      
     assign rd1 = RD1Sets[RA1Q[$clog2(SRAMWIDTH)-1:0]];      
-    openhw_ram2p1r1wbe_64x32 memory2(.CLKA(clk), .CLKB(clk), 
+    ram2p1r1wbe_64x32 memory2(.CLKA(clk), .CLKB(clk), 
       .CEBA(~ce1), .CEBB(~ce2),
       .WEBA('0), .WEBB(~we2),            
       .AA(ra1[$clog2(DEPTH)-1:$clog2(SRAMNUMSETS)]), 
@@ -113,7 +113,7 @@ module openhw_ram2p1r1wbe import cvw::*; #(parameter cvw_t P,
     
     // Read
     logic [$clog2(DEPTH)-1:0] ra1d;
-    openhw_flopen #($clog2(DEPTH)) adrreg(clk, ce1, ra1, ra1d);
+    flopen #($clog2(DEPTH)) adrreg(clk, ce1, ra1, ra1d);
     assign rd1 = mem[ra1d];
 
     /*      // Read

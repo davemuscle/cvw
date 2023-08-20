@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_shiftcorrection import cvw::*;  #(parameter cvw_t P) (
+module shiftcorrection import cvw::*;  #(parameter cvw_t P) (
   input logic  [P.NORMSHIFTSZ-1:0] Shifted,                // the shifted sum before LZA correction
   // divsqrt
   input logic                      DivOp,                  // is it a divsqrt opperation
@@ -57,14 +57,14 @@ module openhw_shiftcorrection import cvw::*;  #(parameter cvw_t P) (
   // correct the shifting error caused by the LZA
   //  - the only possible mantissa for a plus two is all zeroes 
   //  - a one has to propigate all the way through a sum. so we can leave the bottom statement alone
-  openhw_mux2 #(P.NORMSHIFTSZ-2) lzacorrmux(Shifted[P.NORMSHIFTSZ-3:0], Shifted[P.NORMSHIFTSZ-2:1], LZAPlus1, CorrSumShifted);
+  mux2 #(P.NORMSHIFTSZ-2) lzacorrmux(Shifted[P.NORMSHIFTSZ-3:0], Shifted[P.NORMSHIFTSZ-2:1], LZAPlus1, CorrSumShifted);
 
   // correct the shifting of the divsqrt caused by producing a result in (2, .5] range
   // condition: if the msb is 1 or the exponent was one, but the shifted quotent was < 1 (Subnorm)
   assign LeftShiftQm = (LZAPlus1|(DivQe==1&~LZAPlus1));
   assign CorrQm0     = Shifted[P.NORMSHIFTSZ-3:P.NORMSHIFTSZ-P.CORRSHIFTSZ-2];
   assign CorrQm1     = Shifted[P.NORMSHIFTSZ-2:P.NORMSHIFTSZ-P.CORRSHIFTSZ-1];
-  openhw_mux2 #(P.CORRSHIFTSZ) divcorrmux(CorrQm0, CorrQm1, LeftShiftQm, CorrQmShifted);
+  mux2 #(P.CORRSHIFTSZ) divcorrmux(CorrQm0, CorrQm1, LeftShiftQm, CorrQmShifted);
   
   // if the result of the divider was calculated to be subnormal, then the result was correctly normalized, so select the top shifted bits
   always_comb

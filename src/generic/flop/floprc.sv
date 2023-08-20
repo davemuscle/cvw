@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module openhw_floprc #(parameter WIDTH = 8) (
+module floprc #(parameter WIDTH = 8) (
   input  logic clk,
   input  logic reset,
   input  logic clear,
