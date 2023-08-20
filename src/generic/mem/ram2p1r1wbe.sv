@@ -118,7 +118,7 @@ module ram2p1r1wbe import cvw::*; #(parameter cvw_t P,
 
     /*      // Read
      always_ff @(posedge clk) 
-     if(ce1) rd1 <= #1 mem[ra1]; */
+     if(ce1) rd1 <= mem[ra1]; */
     
     // Write divided into part for bytes and part for extra msbs
     // coverage off     
@@ -127,13 +127,13 @@ module ram2p1r1wbe import cvw::*; #(parameter cvw_t P,
       always @(posedge clk) 
         if (ce2 & we2) 
           for(i = 0; i < WIDTH/8; i++) 
-            if(bwe2[i]) mem[wa2][i*8 +: 8] <= #1 wd2[i*8 +: 8];
+            if(bwe2[i]) mem[wa2][i*8 +: 8] <= wd2[i*8 +: 8];
     // coverage on
   
     if (WIDTH%8 != 0) // handle msbs if width not a multiple of 8
       always @(posedge clk) 
         if (ce2 & we2 & bwe2[WIDTH/8])
-          mem[wa2][WIDTH-1:WIDTH-WIDTH%8] <= #1 wd2[WIDTH-1:WIDTH-WIDTH%8];
+          mem[wa2][WIDTH-1:WIDTH-WIDTH%8] <= wd2[WIDTH-1:WIDTH-WIDTH%8];
   end
   
 endmodule

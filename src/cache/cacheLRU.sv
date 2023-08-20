@@ -143,9 +143,9 @@ module cacheLRU
       if(LRUWriteEn)
         LRUMemory[PAdr] <= NextLRU;
       if(LRUWriteEn & (PAdr == CacheSet))
-        CurrLRU <= #1 NextLRU;
+        CurrLRU <= NextLRU;
       else 
-        CurrLRU <= #1 LRUMemory[CacheSet];
+        CurrLRU <= LRUMemory[CacheSet];
     end
   end
 
