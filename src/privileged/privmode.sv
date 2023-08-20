@@ -26,14 +26,14 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module privmode import cvw::*;  #(parameter cvw_t P) (
+module openhw_privmode import cvw::*;  #(parameter cvw_t P) (
   input  logic             clk, reset,
   input  logic             StallW, 
   input  logic             TrapM,               // Trap 
   input  logic             mretM, sretM,        // return instruction
-  input  logic             DelegateM,           // trap delegated to supervisor mode
-  input  logic [1:0]       STATUS_MPP,          // machine trap previous privilege mode
-  input  logic             STATUS_SPP,          // supervisor trap previous privilege mode
+  input  logic             DelegateM,           // openhw_trap delegated to supervisor mode
+  input  logic [1:0]       STATUS_MPP,          // machine openhw_trap previous privilege mode
+  input  logic             STATUS_SPP,          // supervisor openhw_trap previous privilege mode
   output logic [1:0]       NextPrivilegeModeM,  // next privilege mode, used when updating STATUS CSR on a trap
   output logic [1:0]       PrivilegeModeW       // current privilege mode
 ); 
@@ -49,7 +49,7 @@ module privmode import cvw::*;  #(parameter cvw_t P) (
       else                             NextPrivilegeModeM = PrivilegeModeW;
     end
 
-    flopenl #(2) privmodereg(clk, reset, ~StallW, NextPrivilegeModeM, P.M_MODE, PrivilegeModeW);
+    openhw_flopenl #(2) privmodereg(clk, reset, ~StallW, NextPrivilegeModeM, P.M_MODE, PrivilegeModeW);
   end else begin  // only machine mode supported
     assign NextPrivilegeModeM = P.M_MODE;
     assign PrivilegeModeW = P.M_MODE;

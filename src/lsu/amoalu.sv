@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module amoalu import cvw::*;  #(parameter cvw_t P) (
+module openhw_amoalu import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.XLEN-1:0] ReadDataM,    // LSU's ReadData
   input  logic [P.XLEN-1:0] IHWriteDataM, // LSU's WriteData
   input  logic [6:0]        LSUFunct7M,   // ALU Operation
@@ -54,7 +54,7 @@ module amoalu import cvw::*;  #(parameter cvw_t P) (
       default:  y = 'x;                                     // undefined; *** could change to b for efficiency
     endcase
 
-  // sign extend if necessary
+  // sign openhw_extend if necessary
   if (P.XLEN == 32) begin:sext
     assign a = ReadDataM;
     assign b = IHWriteDataM;

@@ -23,7 +23,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module lzc #(parameter WIDTH = 1) (
+module openhw_lzc #(parameter WIDTH = 1) (
   input  logic [WIDTH-1:0]            num,    // number to count the leading zeroes of
   output logic [$clog2(WIDTH+1)-1:0]  ZeroCnt // the number of leading zeroes
 );

@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module satCounter2 (
+module openhw_satCounter2 (
    input logic        BrDir,
    input logic [1:0]  OldState,
    output logic [1:0] NewState

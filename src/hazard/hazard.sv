@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module hazard (
+module openhw_hazard (
   // Detect hazards
   input  logic  BPWrongE, CSRWriteFenceM, RetM, TrapM,   
   input  logic  LoadStallD, StoreStallD, MDUStallD, CSRRdStallD,
@@ -48,13 +48,13 @@ module hazard (
 
   // WFI logic
   assign WFIStallM = wfiM & ~IntPendingM;         // WFI waiting for an interrupt or timeout
-  assign WFIInterruptedM = wfiM & IntPendingM;    // WFI detects a pending interrupt.  Retire WFI; trap if interrupt is enabled.
+  assign WFIInterruptedM = wfiM & IntPendingM;    // WFI detects a pending interrupt.  Retire WFI; openhw_trap if interrupt is enabled.
   
   // stalls and flushes
   // loads: stall for one cycle if the subsequent instruction depends on the load
   // branches and jumps: flush the next two instructions if the branch is taken in EXE
   // CSR Writes: stall all instructions after the CSR until it completes, except that PC must change when branch is resolved
-  //             this also applies to other privileged instructions such as M/S/URET, ECALL/EBREAK
+  //             this also applies to other openhw_privileged instructions such as M/S/URET, ECALL/EBREAK
   // Exceptions: flush entire pipeline
   // Ret instructions: occur in M stage.  Might be possible to move earlier, but be careful about hazards
 
@@ -80,9 +80,9 @@ module hazard (
   //  Division stalls in the execute stage
   //  Flushing any stage has priority over the corresponding stage stall.  
   //    Even if the register gave clear priority over enable, various FSMs still need to disable the stall, so it's best to gate the stall here with flush
-  //  The IFU and LSU stall the entire pipeline on a cache miss, bus access, or other long operation.  
+  //  The IFU and LSU stall the entire pipeline on a openhw_cache miss, bus access, or other long operation.  
   //    The IFU stalls the entire pipeline rather than just Fetch to avoid complications with instructions later in the pipeline causing Exceptions
-  //    A trap could be asserted at the start of a IFU/LSU stall, and should flush the memory operation
+  //    A openhw_trap could be asserted at the start of a IFU/LSU stall, and should flush the memory operation
   assign StallFCause = '0;
   assign StallDCause = (LoadStallD | StoreStallD | MDUStallD | CSRRdStallD | FCvtIntStallD | FPUStallD) & ~FlushDCause;
   assign StallECause = (DivBusyE | FDivBusyE) & ~FlushECause; 

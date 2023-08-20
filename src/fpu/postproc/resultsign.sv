@@ -26,18 +26,18 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module resultsign (
+module openhw_resultsign (
   input  logic [2:0]  Frm,        // rounding mode
   input  logic        FmaOp,      // is the operation an Fma
-  input  logic        Mult,       // is the fma opperation multipy
+  input  logic        Mult,       // is the openhw_fma opperation multipy
   input  logic        ZInf,       // is Z infinity
   input  logic        InfIn,      // are any of the inputs infinity
-  input  logic        FmaSZero,   // is the fma sum zero
+  input  logic        FmaSZero,   // is the openhw_fma sum zero
   input  logic        Ms,         // normalized result sign
   input  logic        FmaPs,      // product's sign
   input  logic        FmaAs,      // aligned addend's sign
   input  logic        Guard,      // guard bit for rounding
-  input  logic        Round,      // round bit for rounding
+  input  logic        Round,      // openhw_round bit for rounding
   input  logic        Sticky,     // sticky bit for rounding
   output logic        Rs          // result sign
 );

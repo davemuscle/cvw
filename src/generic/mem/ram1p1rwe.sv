@@ -30,7 +30,7 @@
 
 // WIDTH is number of bits in one "word" of the memory, DEPTH is number of such words
 
-module ram1p1rwe import cvw::* ; #(parameter cvw_t P,
+module openhw_ram1p1rwe import cvw::* ; #(parameter cvw_t P,
                    parameter DEPTH=64, WIDTH=44) (
   input logic                     clk,
   input logic                     ce,
@@ -47,19 +47,19 @@ module ram1p1rwe import cvw::* ; #(parameter cvw_t P,
   // ***************************************************************************
   if ((P.USE_SRAM == 1) & (WIDTH == 128) & (DEPTH == 64)) begin // Cache data subarray
     // 64 x 128-bit SRAM
-    ram1p1rwbe_64x128 sram1A (.CLK(clk), .CEB(~ce), .WEB(~we),
+    openhw_ram1p1rwbe_64x128 sram1A (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB('0), .Q(dout));
     
-  end else if ((P.USE_SRAM == 1) & (WIDTH == 44)  & (DEPTH == 64)) begin // RV64 cache tag
+  end else if ((P.USE_SRAM == 1) & (WIDTH == 44)  & (DEPTH == 64)) begin // RV64 openhw_cache tag
     // 64 x 44-bit SRAM
-    ram1p1rwbe_64x44 sram1B (.CLK(clk), .CEB(~ce), .WEB(~we),
+    openhw_ram1p1rwbe_64x44 sram1B (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB('0), .Q(dout));
 
-  end else if ((P.USE_SRAM == 1) & (WIDTH == 22)  & (DEPTH == 64)) begin // RV32 cache tag
+  end else if ((P.USE_SRAM == 1) & (WIDTH == 22)  & (DEPTH == 64)) begin // RV32 openhw_cache tag
     // 64 x 22-bit SRAM
-    ram1p1rwbe_64x22 sram1 (.CLK(clk), .CEB(~ce), .WEB(~we),
+    openhw_ram1p1rwbe_64x22 sram1 (.CLK(clk), .CEB(~ce), .WEB(~we),
       .A(addr), .D(din), 
       .BWEB('0), .Q(dout));     
     
@@ -73,7 +73,7 @@ module ram1p1rwe import cvw::* ; #(parameter cvw_t P,
 
     // Read
     logic [$clog2(DEPTH)-1:0] addrd;
-    flopen #($clog2(DEPTH)) adrreg(clk, ce, addr, addrd);
+    openhw_flopen #($clog2(DEPTH)) adrreg(clk, ce, addr, addrd);
     assign dout = RAM[addrd];
 
     /*      // Read
@@ -85,8 +85,8 @@ module ram1p1rwe import cvw::* ; #(parameter cvw_t P,
     // Therefore these always blocks use the older always @(posedge clk) 
     always @(posedge clk)
       // coverage off
-      // ce only goes low when cachefsm is in READY state and Flush is asserted.
-      // for read-only caches, we only goes high in the STATE_WRITE_LINE cachefsm state.
+      // ce only goes low when openhw_cachefsm is in READY state and Flush is asserted.
+      // for read-only caches, we only goes high in the STATE_WRITE_LINE openhw_cachefsm state.
       // so we can never get we=1, ce=0 for I$.
       if (ce & we)
         // coverage on

@@ -39,7 +39,7 @@
 // number of conexts
 // hardcoded to 2 contexts for now; later upgrade to arbitrary (up to 15872) contexts
 
-module plic_apb import cvw::*;  #(parameter cvw_t P) (
+module openhw_plic_apb import cvw::*;  #(parameter cvw_t P) (
   input  logic                PCLK, PRESETn,
   input  logic                PSEL,
   input  logic [27:0]         PADDR, 
@@ -165,7 +165,7 @@ module plic_apb import cvw::*;  #(parameter cvw_t P) (
 
   // pending interrupt request
   assign nextIntPending = (intPending | requests) & ~intInProgress; 
-  flopr #(P.PLIC_NUM_SRC) intPendingFlop(PCLK,~PRESETn,nextIntPending,intPending);
+  openhw_flopr #(P.PLIC_NUM_SRC) intPendingFlop(PCLK,~PRESETn,nextIntPending,intPending);
 
   // context-dependent signals
   genvar ctx;

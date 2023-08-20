@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module csru import cvw::*;  #(parameter cvw_t P) (
+module openhw_csru import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset, 
   input  logic              InstrValidNotFlushedM,
   input  logic              CSRUWriteM,
@@ -59,12 +59,12 @@ module csru import cvw::*;  #(parameter cvw_t P) (
   assign SetOrWriteFFLAGSM = WriteFFLAGSM | (|SetFflagsM & InstrValidNotFlushedM);
 
   // CSRs
-  flopenr #(3) FRMreg(clk, reset, WriteFRMM, NextFRMM, FRM_REGW);
-  flopenr #(5) FFLAGSreg(clk, reset, SetOrWriteFFLAGSM, NextFFLAGSM, FFLAGS_REGW); 
+  openhw_flopenr #(3) FRMreg(clk, reset, WriteFRMM, NextFRMM, FRM_REGW);
+  openhw_flopenr #(5) FFLAGSreg(clk, reset, SetOrWriteFFLAGSM, NextFFLAGSM, FFLAGS_REGW); 
 
   // CSR Reads
   always_comb begin
-    if (STATUS_FS == 2'b00) begin // fpu disabled, trap
+    if (STATUS_FS == 2'b00) begin // openhw_fpu disabled, trap
       IllegalCSRUAccessM = 1;
       CSRUReadValM = 0;
     end else begin

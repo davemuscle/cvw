@@ -27,11 +27,11 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module cacheLRU  
+module openhw_cacheLRU  
   #(parameter NUMWAYS = 4, SETLEN = 9, OFFSETLEN = 5, NUMLINES = 128) (
   input  logic                clk, 
   input  logic                reset,
-  input  logic                CacheEn,         // Enable the cache memory arrays.  Disable hold read data constant
+  input  logic                CacheEn,         // Enable the openhw_cache memory arrays.  Disable hold read data constant
   input  logic [NUMWAYS-1:0]  HitWay,          // Which way is valid and matches PAdr's tag
   input  logic [NUMWAYS-1:0]  ValidWay,        // Which ways for a particular set are valid, ignores tag
   input  logic [SETLEN-1:0]   CacheSet,        // Cache address, the output of the address select mux, NextAdr, PAdr, or FlushAdr
@@ -75,8 +75,8 @@ module cacheLRU
   // coverage on
 
   // On a miss we need to ignore HitWay and derive the new replacement bits with the VictimWay.
-  mux2 #(NUMWAYS) WayMux(HitWay, VictimWay, SetValid, Way);
-  binencoder #(NUMWAYS) encoder(Way, WayEncoded);
+  openhw_mux2 #(NUMWAYS) WayMux(HitWay, VictimWay, SetValid, Way);
+  openhw_binencoder #(NUMWAYS) encoder(Way, WayEncoded);
 
   // bit duplication
   // expand HitWay as HitWay[3], {{2}{HitWay[2]}}, {{4}{HitWay[1]}, {{8{HitWay[0]}}, ...
@@ -110,7 +110,7 @@ module cacheLRU
 
   // The root node of the LRU tree will always be selected in LRUUpdate. No mux needed.
   assign NextLRU[NUMWAYS-2] = ~WayExpanded[NUMWAYS-2];
-  if (NUMWAYS > 2) mux2 #(1) LRUMuxes[NUMWAYS-3:0](CurrLRU[NUMWAYS-3:0], ~WayExpanded[NUMWAYS-3:0], LRUUpdate[NUMWAYS-3:0], NextLRU[NUMWAYS-3:0]);
+  if (NUMWAYS > 2) openhw_mux2 #(1) LRUMuxes[NUMWAYS-3:0](CurrLRU[NUMWAYS-3:0], ~WayExpanded[NUMWAYS-3:0], LRUUpdate[NUMWAYS-3:0], NextLRU[NUMWAYS-3:0]);
 
   // Compute next victim way.
   for(node = NUMWAYS-2; node >= NUMWAYS/2; node--) begin
@@ -128,11 +128,11 @@ module cacheLRU
   logic [LOGNUMWAYS-1:0] FirstZeroWay;
   logic [LOGNUMWAYS-1:0] VictimWayEnc;
   
-  priorityonehot #(NUMWAYS) FirstZeroEncoder(~ValidWay, FirstZero);
-  binencoder #(NUMWAYS) FirstZeroWayEncoder(FirstZero, FirstZeroWay);
-  mux2 #(LOGNUMWAYS) VictimMux(FirstZeroWay, Intermediate[NUMWAYS-2], AllValid, VictimWayEnc);
-  //decoder #(LOGNUMWAYS) decoder (Intermediate[NUMWAYS-2], VictimWay);
-  decoder #(LOGNUMWAYS) decoder (VictimWayEnc, VictimWay);
+  openhw_priorityonehot #(NUMWAYS) FirstZeroEncoder(~ValidWay, FirstZero);
+  openhw_binencoder #(NUMWAYS) FirstZeroWayEncoder(FirstZero, FirstZeroWay);
+  openhw_mux2 #(LOGNUMWAYS) VictimMux(FirstZeroWay, Intermediate[NUMWAYS-2], AllValid, VictimWayEnc);
+  //decoder #(LOGNUMWAYS) openhw_decoder (Intermediate[NUMWAYS-2], VictimWay);
+  openhw_decoder #(LOGNUMWAYS) openhw_decoder (VictimWayEnc, VictimWay);
 
   // LRU storage must be reset for modelsim to run. However the reset value does not actually matter in practice.
   // This is a two port memory.

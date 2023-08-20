@@ -26,12 +26,12 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module trap import cvw::*;  #(parameter cvw_t P) (
+module openhw_trap import cvw::*;  #(parameter cvw_t P) (
   input  logic                 reset, 
   input  logic                 InstrMisalignedFaultM, InstrAccessFaultM, HPTWInstrAccessFaultM, IllegalInstrFaultM,
   input  logic                 BreakpointFaultM, LoadMisalignedFaultM, StoreAmoMisalignedFaultM,
   input  logic                 LoadAccessFaultM, StoreAmoAccessFaultM, EcallFaultM, InstrPageFaultM,
-  input  logic                 LoadPageFaultM, StoreAmoPageFaultM,              // various trap sources
+  input  logic                 LoadPageFaultM, StoreAmoPageFaultM,              // various openhw_trap sources
   input  logic                 mretM, sretM,                                    // return instructions
   input  logic                 wfiM,                                            // wait for interrupt instruction
   input  logic [1:0]           PrivilegeModeW,                                  // current privilege mode
@@ -45,8 +45,8 @@ module trap import cvw::*;  #(parameter cvw_t P) (
   output logic                 InterruptM,                                      // Interrupt is occurring
   output logic                 ExceptionM,                                      // exception is occurring
   output logic                 IntPendingM,                                     // Interrupt is pending, might occur if enabled
-  output logic                 DelegateM,                                       // Delegate trap to supervisor handler
-  output logic [3:0]           CauseM                                           // trap cause
+  output logic                 DelegateM,                                       // Delegate openhw_trap to supervisor handler
+  output logic [3:0]           CauseM                                           // openhw_trap cause
 );
 
   logic                        MIntGlobalEnM, SIntGlobalEnM;                    // Global interupt enables
@@ -91,7 +91,7 @@ module trap import cvw::*;  #(parameter cvw_t P) (
   assign RetM  = mretM | sretM;
 
   ///////////////////////////////////////////
-  // Cause priority defined in table 3.7 of 20190608 privileged spec
+  // Cause priority defined in table 3.7 of 20190608 openhw_privileged spec
   // Exceptions are of lower priority than all interrupts (3.1.9)
   ///////////////////////////////////////////
 

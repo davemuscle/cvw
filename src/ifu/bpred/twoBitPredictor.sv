@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module twoBitPredictor import cvw::*; #(parameter cvw_t P, parameter XLEN,
+module openhw_twoBitPredictor import cvw::*; #(parameter cvw_t P, parameter XLEN,
                          parameter k = 10) (
   input  logic             clk,
   input  logic             reset,
@@ -53,7 +53,7 @@ module twoBitPredictor import cvw::*; #(parameter cvw_t P, parameter XLEN,
   assign IndexM = {PCM[k+1] ^ PCM[1], PCM[k:2]};  
 
 
-  ram2p1r1wbe #(P, 2**k, 2) PHT(.clk(clk),
+  openhw_ram2p1r1wbe #(P, 2**k, 2) PHT(.clk(clk),
     .ce1(~StallF), .ce2(~StallW & ~FlushW),
     .ra1(IndexNextF),
     .rd1(BPDirPredF),
@@ -62,13 +62,13 @@ module twoBitPredictor import cvw::*; #(parameter cvw_t P, parameter XLEN,
     .we2(BranchM),
     .bwe2(1'b1));
   
-  flopenrc #(2) PredictionRegD(clk, reset,  FlushD, ~StallD, BPDirPredF, BPDirPredD);
-  flopenrc #(2) PredictionRegE(clk, reset,  FlushE, ~StallE, BPDirPredD, BPDirPredE);
+  openhw_flopenrc #(2) PredictionRegD(clk, reset,  FlushD, ~StallD, BPDirPredF, BPDirPredD);
+  openhw_flopenrc #(2) PredictionRegE(clk, reset,  FlushE, ~StallE, BPDirPredD, BPDirPredE);
 
   assign BPDirPredWrongE = PCSrcE != BPDirPredE[1] & BranchE;
 
-  satCounter2 BPDirUpdateE(.BrDir(PCSrcE), .OldState(BPDirPredE), .NewState(NewBPDirPredE));
-  flopenrc #(2) NewPredictionRegM(clk, reset,  FlushM, ~StallM, NewBPDirPredE, NewBPDirPredM);
+  openhw_satCounter2 BPDirUpdateE(.BrDir(PCSrcE), .OldState(BPDirPredE), .NewState(NewBPDirPredE));
+  openhw_flopenrc #(2) NewPredictionRegM(clk, reset,  FlushM, ~StallM, NewBPDirPredE, NewBPDirPredM);
   
 
 endmodule

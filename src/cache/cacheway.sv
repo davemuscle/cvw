@@ -27,16 +27,16 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module cacheway import cvw::*; #(parameter cvw_t P, 
+module openhw_cacheway import cvw::*; #(parameter cvw_t P, 
                   parameter PA_BITS, XLEN, NUMLINES=512, LINELEN = 256, TAGLEN = 26,
                   OFFSETLEN = 5, INDEXLEN = 9, READ_ONLY_CACHE = 0) (
   input  logic                        clk,
   input  logic                        reset,
   input  logic                        FlushStage,     // Pipeline flush of second stage (prevent writes and bus operations)
-  input  logic                        CacheEn,        // Enable the cache memory arrays.  Disable hold read data constant
+  input  logic                        CacheEn,        // Enable the openhw_cache memory arrays.  Disable hold read data constant
   input  logic [$clog2(NUMLINES)-1:0] CacheSet,       // Cache address, the output of the address select mux, NextAdr, PAdr, or FlushAdr
   input  logic [PA_BITS-1:0]          PAdr,           // Physical address 
-  input  logic [LINELEN-1:0]          LineWriteData,  // Final data written to cache (D$ only)
+  input  logic [LINELEN-1:0]          LineWriteData,  // Final data written to openhw_cache (D$ only)
   input  logic                        SetValid,       // Set the valid bit in the selected way and set
   input  logic                        SetDirty,       // Set the dirty bit in the selected way and set
   input  logic                        ClearDirty,     // Clear the dirty bit in the selected way and set
@@ -45,7 +45,7 @@ module cacheway import cvw::*; #(parameter cvw_t P,
   input  logic                        VictimWay,      // LRU selected this way as victim to evict
   input  logic                        FlushWay,       // This way is selected for flush and possible writeback if dirty
   input  logic                        InvalidateCache,// Clear all valid bits
-  input  logic [LINELEN/8-1:0]        LineByteMask,   // Final byte enables to cache (D$ only)
+  input  logic [LINELEN/8-1:0]        LineByteMask,   // Final byte enables to openhw_cache (D$ only)
 
   output logic [LINELEN-1:0]          ReadDataLineWay,// This way's read data if valid
   output logic                        HitWay,         // This way hits
@@ -78,7 +78,7 @@ module cacheway import cvw::*; #(parameter cvw_t P,
   if (!READ_ONLY_CACHE) begin:flushlogic
     logic                               FlushWayEn;
 
-    mux2 #(1) seltagmux(VictimWay, FlushWay, SelFlush, SelTag);
+    openhw_mux2 #(1) seltagmux(VictimWay, FlushWay, SelFlush, SelTag);
 
     // FlushWay is part of a one hot way selection. Must clear it if FlushWay not selected.
     // coverage off -item e 1 -fecexprrow 3
@@ -90,7 +90,7 @@ module cacheway import cvw::*; #(parameter cvw_t P,
     assign SelNonHit = SetValid;
   end
 
-  mux2 #(1) selectedwaymux(HitWay, SelTag, SelNonHit , SelData);
+  openhw_mux2 #(1) selectedwaymux(HitWay, SelTag, SelNonHit , SelData);
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   // Write Enable demux
@@ -100,7 +100,7 @@ module cacheway import cvw::*; #(parameter cvw_t P,
   assign SetDirtyWay = SetDirty & SelData;                                 // exclusion-tag: icache SetDirtyWay
   assign ClearDirtyWay = ClearDirty & SelData;
   assign SelectedWriteWordEn = (SetValidWay | SetDirtyWay) & ~FlushStage;  // exclusion-tag: icache SelectedWiteWordEn
-  assign SetValidEN = SetValidWay & ~FlushStage;                           // exclusion-tag: cache SetValidEN
+  assign SetValidEN = SetValidWay & ~FlushStage;                           // exclusion-tag: openhw_cache SetValidEN
 
   // If writing the whole line set all write enables to 1, else only set the correct word.
   assign FinalByteMask = SetValidWay ? '1 : LineByteMask; // OR
@@ -109,7 +109,7 @@ module cacheway import cvw::*; #(parameter cvw_t P,
   // Tag Array
   /////////////////////////////////////////////////////////////////////////////////////////////
 
-  ram1p1rwe #(.P(P), .DEPTH(NUMLINES), .WIDTH(TAGLEN)) CacheTagMem(.clk, .ce(CacheEn),
+  openhw_ram1p1rwe #(.P(P), .DEPTH(NUMLINES), .WIDTH(TAGLEN)) CacheTagMem(.clk, .ce(CacheEn),
     .addr(CacheSet), .dout(ReadTag),
     .din(PAdr[PA_BITS-1:OFFSETLEN+INDEXLEN]), .we(SetValidEN));
 
@@ -131,12 +131,12 @@ module cacheway import cvw::*; #(parameter cvw_t P,
   
   for(words = 0; words < NUMSRAM; words++) begin: word
     if (!READ_ONLY_CACHE) begin:wordram
-      ram1p1rwbe #(.P(P), .DEPTH(NUMLINES), .WIDTH(SRAMLEN)) CacheDataMem(.clk, .ce(CacheEn), .addr(CacheSet),
+      openhw_ram1p1rwbe #(.P(P), .DEPTH(NUMLINES), .WIDTH(SRAMLEN)) CacheDataMem(.clk, .ce(CacheEn), .addr(CacheSet),
       .dout(ReadDataLine[SRAMLEN*(words+1)-1:SRAMLEN*words]),
       .din(LineWriteData[SRAMLEN*(words+1)-1:SRAMLEN*words]),
       .we(SelectedWriteWordEn), .bwe(FinalByteMask[SRAMLENINBYTES*(words+1)-1:SRAMLENINBYTES*words]));
     end else begin:wordram // no byte-enable needed for i$.
-      ram1p1rwe #(.P(P), .DEPTH(NUMLINES), .WIDTH(SRAMLEN)) CacheDataMem(.clk, .ce(CacheEn), .addr(CacheSet),
+      openhw_ram1p1rwe #(.P(P), .DEPTH(NUMLINES), .WIDTH(SRAMLEN)) CacheDataMem(.clk, .ce(CacheEn), .addr(CacheSet),
       .dout(ReadDataLine[SRAMLEN*(words+1)-1:SRAMLEN*words]),
       .din(LineWriteData[SRAMLEN*(words+1)-1:SRAMLEN*words]),
       .we(SelectedWriteWordEn));

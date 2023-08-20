@@ -28,7 +28,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 // HCLK and clk must be the same clock!
-module busfsm (
+module openhw_busfsm (
   input  logic       HCLK,
   input  logic       HRESETn,
 

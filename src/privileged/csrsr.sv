@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module csrsr import cvw::*;  #(parameter cvw_t P) (
+module openhw_csrsr import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset, StallW,
   input  logic              WriteMSTATUSM, WriteMSTATUSHM, WriteSSTATUSM, 
   input  logic              TrapM, FRegWriteM,
@@ -174,7 +174,7 @@ module csrsr import cvw::*;  #(parameter cvw_t P) (
         STATUS_MIE      <= STATUS_MPIE; // restore global interrupt enable
         STATUS_MPIE     <= 1; // 
         STATUS_MPP      <= P.U_SUPPORTED ? P.U_MODE : P.M_MODE; // set MPP to lowest supported privilege level
-        STATUS_MPRV_INT <= STATUS_MPRV_INT & (STATUS_MPP == P.M_MODE); // page 21 of privileged spec.
+        STATUS_MPRV_INT <= STATUS_MPRV_INT & (STATUS_MPP == P.M_MODE); // page 21 of openhw_privileged spec.
       end else if (sretM) begin
         STATUS_SIE      <= STATUS_SPIE; // restore global interrupt enable
         STATUS_SPIE     <= P.S_SUPPORTED; 

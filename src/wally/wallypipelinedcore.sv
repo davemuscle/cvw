@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
+module openhw_wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
    input  logic                  clk, reset,
    // Privileged
    input  logic                  MTimerInt, MExtInt, SExtInt, MSwInt,
@@ -118,7 +118,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
   logic                          IFUStallF;
   logic                          LSUStallM;
 
-  // cpu lsu interface
+  // cpu openhw_lsu interface
   logic [2:0]                    Funct3M;
   logic [P.XLEN-1:0]             IEUAdrE;
   logic [P.XLEN-1:0]             WriteDataM;
@@ -126,7 +126,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
   logic [P.LLEN-1:0]             ReadDataW;  
   logic                          CommittedM;
 
-  // AHB ifu interface
+  // AHB openhw_ifu interface
   logic [P.PA_BITS-1:0]          IFUHADDR;
   logic [2:0]                    IFUHBURST;
   logic [1:0]                    IFUHTRANS;
@@ -166,7 +166,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
   logic                          wfiM, IntPendingM;
 
   // instruction fetch unit: PC, branch prediction, instruction cache
-  ifu #(P) ifu(.clk, .reset,
+  openhw_ifu #(P) ifu(.clk, .reset,
     .StallF, .StallD, .StallE, .StallM, .StallW, .FlushD, .FlushE, .FlushM, .FlushW,
     .InstrValidM, .InstrValidE, .InstrValidD,
     .BranchD, .BranchE, .JumpD, .JumpE, .ICacheStallF,
@@ -182,14 +182,14 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
     .BTAWrongM, .RASPredPCWrongM, .IClassWrongM,
     // Faults out
     .IllegalBaseInstrD, .IllegalFPUInstrD, .InstrPageFaultF, .IllegalIEUFPUInstrD, .InstrMisalignedFaultM,
-    // mmu management
+    // openhw_mmu management
     .PrivilegeModeW, .PTE, .PageType, .SATP_REGW, .STATUS_MXR, .STATUS_SUM, .STATUS_MPRV,
     .STATUS_MPP, .ITLBWriteF, .sfencevmaM, .ITLBMissF,
     // pmp/pma (inside mmu) signals. 
     .PMPCFG_ARRAY_REGW,  .PMPADDR_ARRAY_REGW, .InstrAccessFaultF, .InstrUpdateDAF); 
     
-  // integer execution unit: integer register file, datapath and controller
-  ieu #(P) ieu(.clk, .reset,
+  // integer execution unit: integer register file, openhw_datapath and controller
+  openhw_ieu #(P) ieu(.clk, .reset,
      // Decode Stage interface
      .InstrD, .STATUS_FS, .ENVCFG_CBE, .IllegalIEUFPUInstrD, .IllegalBaseInstrD,
      // Execute Stage interface
@@ -198,7 +198,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      // Memory stage interface
      .SquashSCW,  // from LSU
      .MemRWM,     // read/write control goes to LSU
-     .AtomicM,    // atomic control goes to LSU
+     .AtomicM,    // openhw_atomic control goes to LSU
      .WriteDataM, // Write data to LSU
      .Funct3M,    // size and signedness to LSU
      .SrcAM,      // to privilege and fpu
@@ -212,7 +212,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .FCvtIntStallD, .LoadStallD, .MDUStallD, .CSRRdStallD, .PCSrcE,
      .CSRReadM, .CSRWriteM, .PrivilegedM, .CSRWriteFenceM, .InvalidateICacheM, .StoreStallD); 
 
-  lsu #(P) lsu(
+  openhw_lsu #(P) lsu(
     .clk, .reset, .StallM, .FlushM, .StallW, .FlushW,
     // CPU interface
     .MemRWM, .Funct3M, .Funct7M(InstrM[31:25]), .AtomicM,
@@ -222,16 +222,16 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
     // connected to ahb (all stay the same)
     .LSUHADDR,  .HRDATA, .LSUHWDATA, .LSUHWSTRB, .LSUHSIZE, 
     .LSUHBURST, .LSUHTRANS, .LSUHWRITE, .LSUHREADY,
-    // connect to csr or privilege and stay the same.
+    // connect to openhw_csr or privilege and stay the same.
     .PrivilegeModeW, .BigEndianM, // connects to csr
     .PMPCFG_ARRAY_REGW,           // connects to csr
     .PMPADDR_ARRAY_REGW,          // connects to csr
-    // hptw keep i/o
+    // openhw_hptw keep i/o
     .SATP_REGW,                   // from csr
     .STATUS_MXR,                  // from csr
     .STATUS_SUM,                  // from csr
-    .STATUS_MPRV,                 // from csr            
-    .STATUS_MPP,                  // from csr      
+    .STATUS_MPRV,                 // from openhw_csr            
+    .STATUS_MPP,                  // from openhw_csr      
     .sfencevmaM,                  // connects to privilege
     .DCacheStallM,                // connects to privilege
     .LoadPageFaultM,              // connects to privilege
@@ -246,7 +246,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
     .LSUStallM);                    
 
   if(P.BUS_SUPPORTED) begin : ebu
-    ebu #(P.XLEN, P.PA_BITS, P.AHBW) ebu(// IFU connections
+    openhw_ebu #(P.XLEN, P.PA_BITS, P.AHBW) ebu(// IFU connections
       .clk, .reset,
       // IFU interface
       .IFUHADDR, .IFUHBURST, .IFUHTRANS, .IFUHREADY, .IFUHSIZE,
@@ -260,7 +260,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
   end
 
   // global stall and flush control  
-  hazard  hzu(
+  openhw_hazard  hzu(
     .BPWrongE, .CSRWriteFenceM, .RetM, .TrapM,
     .LoadStallD, .StoreStallD, .MDUStallD, .CSRRdStallD,
     .LSUStallM, .IFUStallF,
@@ -272,9 +272,9 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
     .StallF, .StallD, .StallE, .StallM, .StallW,
     .FlushD, .FlushE, .FlushM, .FlushW);    
 
-  // privileged unit
+  // openhw_privileged unit
   if (P.ZICSR_SUPPORTED) begin:priv
-    privileged #(P) priv(
+    openhw_privileged #(P) priv(
       .clk, .reset,
       .FlushD, .FlushE, .FlushM, .FlushW, .StallD, .StallE, .StallM, .StallW,
       .CSRReadM, .CSRWriteM, .SrcAM, .PCM, .PC2NextF,
@@ -308,7 +308,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
 
   // multiply/divide unit
   if (P.M_SUPPORTED | P.ZMMUL_SUPPORTED) begin:mdu
-    mdu #(P) mdu(.clk, .reset, .StallM, .StallW, .FlushE, .FlushM, .FlushW,
+    openhw_mdu #(P) mdu(.clk, .reset, .StallM, .StallW, .FlushE, .FlushM, .FlushW,
       .ForwardedSrcAE, .ForwardedSrcBE, 
       .Funct3E, .Funct3M, .IntDivE, .W64E, .MDUActiveE,
       .MDUResultW, .DivBusyE); 
@@ -319,7 +319,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
 
   // floating point unit
   if (P.F_SUPPORTED) begin:fpu
-    fpu #(P) fpu(
+    openhw_fpu #(P) fpu(
       .clk, .reset,
       .FRM_REGW,                           // Rounding mode from CSR
       .InstrD,                             // instruction from IFU
@@ -332,16 +332,16 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
       .FRegWriteM,                         // FP register write enable
       .FpLoadStoreM,
       .ForwardedSrcBE,                     // Integer input for intdiv
-      .Funct3E, .Funct3M, .IntDivE, .W64E, // Integer flags and functions
+      .Funct3E, .Funct3M, .IntDivE, .W64E, // Integer openhw_flags and functions
       .FPUStallD,                          // Stall the decode stage
       .FWriteIntE, .FCvtIntE,              // integer register write enable, conversion operation
       .FWriteDataM,                        // Data to be written to memory
       .FIntResM,                           // data to be written to integer register
       .FCvtIntResW,                        // fp -> int conversion result to be stored in int register
-      .FCvtIntW,                           // fpu result selection
+      .FCvtIntW,                           // openhw_fpu result selection
       .FDivBusyE,                          // Is the divide/sqrt unit busy (stall execute stage)
-      .IllegalFPUInstrD,                   // Is the instruction an illegal fpu instruction
-      .SetFflagsM,                         // FPU flags (to privileged unit)
+      .IllegalFPUInstrD,                   // Is the instruction an illegal openhw_fpu instruction
+      .SetFflagsM,                         // FPU openhw_flags (to openhw_privileged unit)
       .FIntDivResultW); 
   end else begin                           // no F_SUPPORTED or D_SUPPORTED; tie outputs low
     assign FPUStallD        = 0;

@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module csrc  import cvw::*;  #(parameter cvw_t P) (
+module openhw_csrc  import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset,
   input  logic              StallE, StallM, 
   input  logic              FlushM, 
@@ -83,8 +83,8 @@ module csrc  import cvw::*;  #(parameter cvw_t P) (
   genvar                   i;
 
   // Interface signals
-  flopenrc #(2) LoadStallEReg(.clk, .reset, .clear(1'b0), .en(~StallE), .d({StoreStallD, LoadStallD}), .q({StoreStallE, LoadStallE}));  // don't flush the load stall during a load stall.
-  flopenrc #(2) LoadStallMReg(.clk, .reset, .clear(FlushM), .en(~StallM), .d({StoreStallE, LoadStallE}), .q({StoreStallM, LoadStallM}));  
+  openhw_flopenrc #(2) LoadStallEReg(.clk, .reset, .clear(1'b0), .en(~StallE), .d({StoreStallD, LoadStallD}), .q({StoreStallE, LoadStallE}));  // don't flush the load stall during a load stall.
+  openhw_flopenrc #(2) LoadStallMReg(.clk, .reset, .clear(FlushM), .en(~StallM), .d({StoreStallE, LoadStallE}), .q({StoreStallM, LoadStallM}));  
   
   // Determine when to increment each counter
   assign CounterEvent[0]    = 1'b1;                                                      // MCYCLE always increments
@@ -101,12 +101,12 @@ module csrc  import cvw::*;  #(parameter cvw_t P) (
     assign CounterEvent[10] = IClassWrongM & InstrValidNotFlushedM;                      // instruction class predictor wrong
     assign CounterEvent[11] = LoadStallM;                                                // Load Stalls. don't want to suppress on flush as this only happens if flushed.
     assign CounterEvent[12] = StoreStallM;                                               //  Store Stall
-    assign CounterEvent[13] = DCacheAccess;                                              // data cache access
-    assign CounterEvent[14] = DCacheMiss;                                                // data cache miss. Miss asserted 1 cycle at start of cache miss
-    assign CounterEvent[15] = DCacheStallM;                                              // d cache miss cycles
-    assign CounterEvent[16] = ICacheAccess;                                              // instruction cache access
-    assign CounterEvent[17] = ICacheMiss;                                                // instruction cache miss. Miss asserted 1 cycle at start of cache miss
-    assign CounterEvent[18] = ICacheStallF;                                              // i cache miss cycles
+    assign CounterEvent[13] = DCacheAccess;                                              // data openhw_cache access
+    assign CounterEvent[14] = DCacheMiss;                                                // data openhw_cache miss. Miss asserted 1 cycle at start of openhw_cache miss
+    assign CounterEvent[15] = DCacheStallM;                                              // d openhw_cache miss cycles
+    assign CounterEvent[16] = ICacheAccess;                                              // instruction openhw_cache access
+    assign CounterEvent[17] = ICacheMiss;                                                // instruction openhw_cache miss. Miss asserted 1 cycle at start of openhw_cache miss
+    assign CounterEvent[18] = ICacheStallF;                                              // i openhw_cache miss cycles
     assign CounterEvent[19] = CSRWriteM & InstrValidNotFlushedM;                         // CSR writes
     assign CounterEvent[20] = InvalidateICacheM & InstrValidNotFlushedM;                 // fence.i
     assign CounterEvent[21] = sfencevmaM & InstrValidNotFlushedM;                        // sfence.vma
@@ -144,12 +144,12 @@ module csrc  import cvw::*;  #(parameter cvw_t P) (
   end
 
   // Read Counters, or cause excepiton if insufficient privilege in light of COUNTEREN flags
-  assign CounterNumM = CSRAdrM[4:0]; // which counter to read?
+  assign CounterNumM = CSRAdrM[4:0]; // which openhw_counter to read?
   always_comb 
     if (PrivilegeModeW == P.M_MODE | 
         MCOUNTEREN_REGW[CounterNumM] & (!P.S_SUPPORTED | PrivilegeModeW == P.S_MODE | SCOUNTEREN_REGW[CounterNumM])) begin
       IllegalCSRCAccessM = 0;
-      if (P.XLEN==64) begin // 64-bit counter reads
+      if (P.XLEN==64) begin // 64-bit openhw_counter reads
         // Veri lator doesn't realize this only occurs for XLEN=64
         /* verilator lint_off WIDTH */  
         if      (CSRAdrM == TIME)  CSRCReadValM = MTIME_CLINT; // TIME register is a shadow of the memory-mapped MTIME from the CLINT
@@ -162,7 +162,7 @@ module csrc  import cvw::*;  #(parameter cvw_t P) (
             CSRCReadValM = 0;
             IllegalCSRCAccessM = 1;  // requested CSR doesn't exist
         end
-      end else begin // 32-bit counter reads
+      end else begin // 32-bit openhw_counter reads
         // Veril ator doesn't realize this only occurs for XLEN=32
         /* verilator lint_off WIDTH */  
         if      (CSRAdrM == TIME)  CSRCReadValM = MTIME_CLINT[31:0];// TIME register is a shadow of the memory-mapped MTIME from the CLINT

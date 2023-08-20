@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module cvtshiftcalc import cvw::*;  #(parameter cvw_t P) (
+module openhw_cvtshiftcalc import cvw::*;  #(parameter cvw_t P) (
   input  logic                     XZero,              // is the input zero?
   input  logic                     ToInt,              // to integer conversion?
   input  logic                     IntToFp,            // interger to floating point conversion?
@@ -50,7 +50,7 @@ module cvtshiftcalc import cvw::*;  #(parameter cvw_t P) (
   //          |  P.XLEN  zeros |     mantissa      | 0's if necessary |
   //                          .
   //          Other problems:
-  //              - if shifting to the right (neg CalcExp) then don't a 1 in the round bit (to prevent an incorrect plus 1 later durring rounding)
+  //              - if shifting to the right (neg CalcExp) then don't a 1 in the openhw_round bit (to prevent an incorrect plus 1 later durring rounding)
   //              - we do however want to keep the one in the sticky bit so set one of bits in the sticky bit area to 1
   //                  - ex: for the case 0010000.... (double)
   //      ??? -> fp:
@@ -62,7 +62,7 @@ module cvtshiftcalc import cvw::*;  #(parameter cvw_t P) (
   //              .
   // change to int shift to the left one
   always_comb 
-  //                                                        get rid of round bit if needed
+  //                                                        get rid of openhw_round bit if needed
   //                                                        |                    add sticky bit if needed
   //                                                        |                    |
       if (ToInt)                CvtShiftIn = {{P.XLEN{1'b0}}, Xm[P.NF]&~CvtCe[P.NE], Xm[P.NF-1]|(CvtCe[P.NE]&Xm[P.NF]), Xm[P.NF-2:0], {P.CVTLEN-P.XLEN{1'b0}}};

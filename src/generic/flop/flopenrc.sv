@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module flopenrc #(parameter WIDTH = 8) (
+module openhw_flopenrc #(parameter WIDTH = 8) (
   input  logic             clk, reset, clear, en,
   input  logic [WIDTH-1:0] d, 
   output logic [WIDTH-1:0] q);

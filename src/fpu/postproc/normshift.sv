@@ -61,7 +61,7 @@
     //      int -> fp: |     lzcIn      | 0's if necessary | << ZeroCnt+1
     //              - plus 1 to shift out the first 1
 
-    // fma shift
+    // openhw_fma shift
     //      |   00   |           Sm           | << LZA output
     //             .
     //      - two extra bits so we can correct for an LZA error of 1 or 2
@@ -70,7 +70,7 @@
     //      | Nf 0's |           Qm           | << calculated shift amount
     //        .
 
-module normshift import cvw::*;  #(parameter cvw_t P) (
+module openhw_normshift import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.LOGNORMSHIFTSZ-1:0]  ShiftAmt,   // shift amount
   input  logic [P.NORMSHIFTSZ-1:0]     ShiftIn,    // number to be shifted
   output logic [P.NORMSHIFTSZ-1:0]     Shifted     // shifted result

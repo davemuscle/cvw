@@ -29,7 +29,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module spill import cvw::*;  #(parameter cvw_t P) (
+module openhw_spill import cvw::*;  #(parameter cvw_t P) (
   input logic               clk,               
   input logic               reset,
   input logic               StallD, FlushD,
@@ -37,16 +37,16 @@ module spill import cvw::*;  #(parameter cvw_t P) (
   input logic [P.XLEN-1:2]  PCPlus4F,          // PCF + 4
   input logic [P.XLEN-1:0]  PCNextF,           // The next PCF
   input logic [31:0]        InstrRawF,         // Instruction from the IROM, I$, or bus. Used to check if the instruction if compressed
-  input logic               IFUCacheBusStallF, // I$ or bus are stalled. Transition to second fetch of spill after the first is fetched
+  input logic               IFUCacheBusStallF, // I$ or bus are stalled. Transition to second fetch of openhw_spill after the first is fetched
   input logic               ITLBMissF,         // ITLB miss, ignore memory request
-  input logic               InstrUpdateDAF,    // Ignore memory request if the hptw support write and a DA page fault occurs (hptw is still active)
+  input logic               InstrUpdateDAF,    // Ignore memory request if the openhw_hptw support write and a DA page fault occurs (hptw is still active)
   output logic [P.XLEN-1:0] PCSpillNextF,      // The next PCF for one of the two memory addresses of the spill
   output logic [P.XLEN-1:0] PCSpillF,          // PCF for one of the two memory addresses of the spill
-  output logic              SelSpillNextF,     // During the transition between the two spill operations, the IFU should stall the pipeline
+  output logic              SelSpillNextF,     // During the transition between the two openhw_spill operations, the IFU should stall the pipeline
   output logic [31:0]       PostSpillInstrRawF,// The final 32 bit instruction after merging the two spilled fetches into 1 instruction
   output logic              CompressedF);      // The fetched instruction is compressed
 
-  // Spill threshold occurs when all the cache offset PC bits are 1 (except [0]).  Without a cache this is just PCF[1]
+  // Spill threshold occurs when all the openhw_cache offset PC bits are 1 (except [0]).  Without a openhw_cache this is just PCF[1]
   typedef enum logic [1:0]  {STATE_READY, STATE_SPILL} statetype;
   localparam                SPILLTHRESHOLD = P.ICACHE_SUPPORTED ? P.ICACHE_LINELENINBITS/32 : 1; 
 
@@ -63,14 +63,14 @@ module spill import cvw::*;  #(parameter cvw_t P) (
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // compute PCF+2 from the raw PC+4
-  mux2 #(P.XLEN) pcplus2mux(.d0({PCF[P.XLEN-1:2], 2'b10}), .d1({PCPlus4F, 2'b00}), .s(PCF[1]), .y(PCPlus2NextF));
+  openhw_mux2 #(P.XLEN) pcplus2mux(.d0({PCF[P.XLEN-1:2], 2'b10}), .d1({PCPlus4F, 2'b00}), .s(PCF[1]), .y(PCPlus2NextF));
   // select between PCNextF and PCF+2
-  mux2 #(P.XLEN) pcnextspillmux(.d0(PCNextF), .d1(PCPlus2NextF), .s(SelSpillNextF & ~FlushD), .y(PCSpillNextF));
+  openhw_mux2 #(P.XLEN) pcnextspillmux(.d0(PCNextF), .d1(PCPlus2NextF), .s(SelSpillNextF & ~FlushD), .y(PCSpillNextF));
   // select between PCF and PCF+2
   // not required for functional correctness, but improves critical path.  pcspillf ends up on the hptw's ihadr 
   // and into the dmmu.  Cutting the path here removes the PC+4 adder.
-  flopr #(P.XLEN) pcplus2reg(clk, reset, PCPlus2NextF, PCPlus2F);
-  mux2 #(P.XLEN) pcspillmux(.d0(PCF), .d1(PCPlus2F), .s(SelSpillF), .y(PCSpillF));
+  openhw_flopr #(P.XLEN) pcplus2reg(clk, reset, PCPlus2NextF, PCPlus2F);
+  openhw_mux2 #(P.XLEN) pcspillmux(.d0(PCF), .d1(PCPlus2F), .s(SelSpillF), .y(PCSpillF));
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Detect spill
@@ -102,10 +102,10 @@ module spill import cvw::*;  #(parameter cvw_t P) (
   ////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // save the first 2 bytes
-  flopenr #(16) SpillInstrReg(clk, reset, SpillSaveF, InstrRawF[15:0], InstrFirstHalfF);
+  openhw_flopenr #(16) SpillInstrReg(clk, reset, SpillSaveF, InstrRawF[15:0], InstrFirstHalfF);
 
   // merge together
-  mux2 #(32) postspillmux(InstrRawF, {InstrRawF[15:0], InstrFirstHalfF}, SpillF, PostSpillInstrRawF);
+  openhw_mux2 #(32) postspillmux(InstrRawF, {InstrRawF[15:0], InstrFirstHalfF}, SpillF, PostSpillInstrRawF);
 
   // Need to use always comb to avoid pessimistic x propagation if PostSpillInstrRawF is x
   always_comb

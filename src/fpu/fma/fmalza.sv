@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fmalza #(WIDTH, NF) ( 
+module openhw_fmalza #(WIDTH, NF) ( 
   input logic [WIDTH-1:0]             A,              // addend
   input logic [2*NF+1:0]              Pm,             // product
   input logic                         Cin,            // carry in
@@ -40,7 +40,7 @@ module fmalza #(WIDTH, NF) (
   logic [WIDTH-1:0]                   P, G, K;        // propagate, generate, kill for each column
   logic [WIDTH-1:0]                   Pp1, Gm1, Km1;  // propagate shifted right by 1, generate/kill shifted left 1
 
-  assign B = {{(NF+1){1'b0}}, Pm, 1'b0};              // Zero extend product
+  assign B = {{(NF+1){1'b0}}, Pm, 1'b0};              // Zero openhw_extend product
 
   assign P = A^B;
   assign G = A&B;
@@ -55,5 +55,5 @@ module fmalza #(WIDTH, NF) (
   assign F[WIDTH]     = ~sub&P[WIDTH-1];
   assign F[WIDTH-1:0] = (Pp1&(G&~Km1 | K&~Gm1)) | (~Pp1&(K&~Km1 | G&~Gm1));
 
-  lzc #(WIDTH+1) lzc (.num(F), .ZeroCnt(SCnt));
+  openhw_lzc #(WIDTH+1) openhw_lzc (.num(F), .ZeroCnt(SCnt));
 endmodule

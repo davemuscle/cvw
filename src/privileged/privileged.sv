@@ -27,7 +27,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////
 
-module privileged import cvw::*;  #(parameter cvw_t P) (
+module openhw_privileged import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset,
   input  logic              StallD, StallE, StallM, StallW,
   input  logic              FlushD, FlushE, FlushM, FlushW, 
@@ -41,23 +41,23 @@ module privileged import cvw::*;  #(parameter cvw_t P) (
   // control signals                                                       
   input  logic              InstrValidM,                                    // Current instruction is valid (not flushed)
   input  logic              CommittedM, CommittedF,                         // current instruction is using bus; don't interrupt
-  input  logic              PrivilegedM,                                    // privileged instruction
-  // processor events for performance counter logging                      
+  input  logic              PrivilegedM,                                    // openhw_privileged instruction
+  // processor events for performance openhw_counter logging                      
   input  logic              FRegWriteM,                                     // instruction will write floating-point registers
   input  logic              LoadStallD,                                     // load instruction is stalling
   input  logic              StoreStallD,                                    // store instruction is stalling
-  input  logic              ICacheStallF,                                   // I cache stalled
-  input  logic              DCacheStallM,                                   // D cache stalled
+  input  logic              ICacheStallF,                                   // I openhw_cache stalled
+  input  logic              DCacheStallM,                                   // D openhw_cache stalled
   input  logic              BPDirPredWrongM,                                // branch predictor guessed wrong direction
   input  logic              BTAWrongM,                                      // branch predictor guessed wrong target
   input  logic              RASPredPCWrongM,                                // return adddress stack guessed wrong target
   input  logic              IClassWrongM,                                   // branch predictor guessed wrong instruction class
   input  logic              BPWrongM,                                       // branch predictor is wrong
   input  logic [3:0]        InstrClassM,                                    // actual instruction class
-  input  logic              DCacheMiss,                                     // data cache miss
-  input  logic              DCacheAccess,                                   // data cache accessed (hit or miss)
-  input  logic              ICacheMiss,                                     // instruction cache miss
-  input  logic              ICacheAccess,                                   // instruction cache access
+  input  logic              DCacheMiss,                                     // data openhw_cache miss
+  input  logic              DCacheAccess,                                   // data openhw_cache accessed (hit or miss)
+  input  logic              ICacheMiss,                                     // instruction openhw_cache miss
+  input  logic              ICacheAccess,                                   // instruction openhw_cache access
   input  logic              DivBusyE,                                       // integer divide busy
   input  logic              FDivBusyE,                                      // floating point divide busy
   // fault sources                                                         
@@ -71,7 +71,7 @@ module privileged import cvw::*;  #(parameter cvw_t P) (
   input  logic              IllegalIEUFPUInstrD,                            // illegal instruction from IEU or FPU
   input  logic              MTimerInt, MExtInt, SExtInt, MSwInt,            // interrupt sources
   input  logic [63:0]       MTIME_CLINT,                                    // timer value from CLINT
-  input  logic [4:0]        SetFflagsM,                                     // set FCSR flags from FPU
+  input  logic [4:0]        SetFflagsM,                                     // set FCSR openhw_flags from FPU
   input  logic              SelHPTW,                                        // HPTW in use.  Causes system to use S-mode endianness for accesses
   // CSR outputs                                                           
   output logic [P.XLEN-1:0] CSRReadValW,                                    // Value read from CSR
@@ -83,7 +83,7 @@ module privileged import cvw::*;  #(parameter cvw_t P) (
   output var logic [P.PA_BITS-3:0] PMPADDR_ARRAY_REGW [P.PMP_ENTRIES-1:0],  // PMP address entries to MMU
   output logic [2:0]        FRM_REGW,                                       // FPU rounding mode
   output logic [3:0]        ENVCFG_CBE,                                     // Cache block operation enables
-  // PC logic output in privileged unit                                    
+  // PC logic output in openhw_privileged unit                                    
   output logic [P.XLEN-1:0] UnalignedPCNextF,                               // Next PC from trap/return PC logic
   // control outputs                                                       
   output logic              RetM, TrapM,                                    // return instruction, or trap
@@ -95,7 +95,7 @@ module privileged import cvw::*;  #(parameter cvw_t P) (
   output logic              wfiM, IntPendingM                               // Stall in Memory stage for WFI until interrupt pending or timeout
 );                                                                         
                                                                            
-  logic [3:0]               CauseM;                                         // trap cause
+  logic [3:0]               CauseM;                                         // openhw_trap cause
   logic [15:0]              MEDELEG_REGW;                                   // exception delegation CSR
   logic [11:0]              MIDELEG_REGW;                                   // interrupt delegation CSR
   logic                     sretM, mretM;                                   // supervisor / machine return instruction
@@ -104,27 +104,27 @@ module privileged import cvw::*;  #(parameter cvw_t P) (
   logic                     InstrPageFaultM;                                // Instruction page fault, delayed to Mem stage
   logic                     InstrAccessFaultM;                              // Instruction access fault, delayed to Mem stages
   logic                     IllegalInstrFaultM;                             // Illegal instruction fault
-  logic                     STATUS_SPP, STATUS_TSR, STATUS_TW, STATUS_TVM;  // Status bits needed within privileged unit
+  logic                     STATUS_SPP, STATUS_TSR, STATUS_TW, STATUS_TVM;  // Status bits needed within openhw_privileged unit
   logic                     STATUS_MIE, STATUS_SIE;                         // status bits: interrupt enables
   logic [11:0]              MIP_REGW, MIE_REGW;                             // interrupt pending and enable bits
-  logic [1:0]               NextPrivilegeModeM;                             // next privilege mode based on trap or return
-  logic                     DelegateM;                                      // trap should be delegated
+  logic [1:0]               NextPrivilegeModeM;                             // next privilege mode based on openhw_trap or return
+  logic                     DelegateM;                                      // openhw_trap should be delegated
   logic                     InterruptM;                                     // interrupt occuring
   logic                     ExceptionM;                                     // Memory stage instruction caused a fault
   logic                     HPTWInstrAccessFaultM;                          // Hardware page table access fault while fetching instruction PTE
   
   // track the current privilege level
-  privmode #(P) privmode(.clk, .reset, .StallW, .TrapM, .mretM, .sretM, .DelegateM,
+  openhw_privmode #(P) privmode(.clk, .reset, .StallW, .TrapM, .mretM, .sretM, .DelegateM,
     .STATUS_MPP, .STATUS_SPP, .NextPrivilegeModeM, .PrivilegeModeW);
 
-  // decode privileged instructions
-  privdec #(P) pmd(.clk, .reset, .StallM, .InstrM(InstrM[31:15]), 
+  // decode openhw_privileged instructions
+  openhw_privdec #(P) pmd(.clk, .reset, .StallM, .InstrM(InstrM[31:15]), 
     .PrivilegedM, .IllegalIEUFPUInstrM, .IllegalCSRAccessM, 
     .PrivilegeModeW, .STATUS_TSR, .STATUS_TVM, .STATUS_TW, .IllegalInstrFaultM, 
     .EcallFaultM, .BreakpointFaultM, .sretM, .mretM, .wfiM, .sfencevmaM);
 
   // Control and Status Registers
-  csr #(P) csr(.clk, .reset, .FlushM, .FlushW, .StallE, .StallM, .StallW,
+  openhw_csr #(P) csr(.clk, .reset, .FlushM, .FlushW, .StallE, .StallM, .StallW,
     .InstrM, .InstrOrigM, .PCM, .SrcAM, .IEUAdrM, .PC2NextF,
     .CSRReadM, .CSRWriteM, .TrapM, .mretM, .sretM, .wfiM, .IntPendingM, .InterruptM,
     .MTimerInt, .MExtInt, .SExtInt, .MSwInt,
@@ -140,13 +140,13 @@ module privileged import cvw::*;  #(parameter cvw_t P) (
     .SetFflagsM, .FRM_REGW, .ENVCFG_CBE,
     .CSRReadValW,.UnalignedPCNextF, .IllegalCSRAccessM, .BigEndianM);
 
-  // pipeline early-arriving trap sources
-  privpiperegs ppr(.clk, .reset, .StallD, .StallE, .StallM, .FlushD, .FlushE, .FlushM,
+  // pipeline early-arriving openhw_trap sources
+  openhw_privpiperegs ppr(.clk, .reset, .StallD, .StallE, .StallM, .FlushD, .FlushE, .FlushM,
     .InstrPageFaultF, .InstrAccessFaultF, .HPTWInstrAccessFaultF, .IllegalIEUFPUInstrD, 
     .InstrPageFaultM, .InstrAccessFaultM, .HPTWInstrAccessFaultM, .IllegalIEUFPUInstrM);
 
-  // trap logic
-  trap #(P) trap(.reset,
+  // openhw_trap logic
+  openhw_trap #(P) trap(.reset,
     .InstrMisalignedFaultM, .InstrAccessFaultM, .HPTWInstrAccessFaultM, .IllegalInstrFaultM,
     .BreakpointFaultM, .LoadMisalignedFaultM, .StoreAmoMisalignedFaultM,
     .LoadAccessFaultM, .StoreAmoAccessFaultM, .EcallFaultM, .InstrPageFaultM,

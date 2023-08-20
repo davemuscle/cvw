@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module swbytemask #(parameter WORDLEN)(
+module openhw_swbytemask #(parameter WORDLEN)(
   input logic  [2:0]                   Size,
   input logic  [$clog2(WORDLEN/8)-1:0] Adr,
   output logic [WORDLEN/8-1:0]         ByteMask

@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module irom import cvw::*;  #(parameter cvw_t P) (
+module openhw_irom import cvw::*;  #(parameter cvw_t P) (
   input logic              clk, 
   input logic              ce,        // Chip Enable.  0: Holds IROMInstrF constant
   input logic [P.XLEN-1:0] Adr,       // PCNextFSpill
@@ -38,9 +38,9 @@ module irom import cvw::*;  #(parameter cvw_t P) (
   logic [P.XLEN-1:0] IROMInstrFFull;
   logic [31:0]       RawIROMInstrF;
   logic [1:0]        AdrD;
-  flopen #(2) AdrReg(clk, ce, Adr[2:1], AdrD);
+  openhw_flopen #(2) AdrReg(clk, ce, Adr[2:1], AdrD);
 
-  rom1p1r #(ADDR_WDITH, P.XLEN) rom(.clk, .ce, .addr(Adr[ADDR_WDITH+OFFSET-1:OFFSET]), .dout(IROMInstrFFull));
+  openhw_rom1p1r #(ADDR_WDITH, P.XLEN) rom(.clk, .ce, .addr(Adr[ADDR_WDITH+OFFSET-1:OFFSET]), .dout(IROMInstrFFull));
   if (P.XLEN == 32) assign RawIROMInstrF = IROMInstrFFull;
   else              begin
   // IROM is aligned to XLEN words, but instructions are 32 bits.  Select between the two
@@ -48,6 +48,6 @@ module irom import cvw::*;  #(parameter cvw_t P) (
     assign RawIROMInstrF = AdrD[1] ? IROMInstrFFull[63:32] : IROMInstrFFull[31:0];
   end
   // If the memory addres is aligned to 2 bytes return the upper 2 bytes in the lower 2 bytes.
-  // The spill logic will handle merging the two together.
+  // The openhw_spill logic will handle merging the two together.
   assign IROMInstrF = AdrD[0] ? {16'b0, RawIROMInstrF[31:16]} : RawIROMInstrF;
 endmodule  

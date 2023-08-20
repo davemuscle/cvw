@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module specialcase import cvw::*;  #(parameter cvw_t P) (
+module openhw_specialcase import cvw::*;  #(parameter cvw_t P) (
   input  logic                 Xs,                // X sign
   input  logic [P.NF:0]        Xm, Ym, Zm,        // input significand's
   input  logic                 XNaN, YNaN, ZNaN,  // are the inputs NaN
@@ -38,12 +38,12 @@ module specialcase import cvw::*;  #(parameter cvw_t P) (
   input  logic                 XZero,             // is X zero
   input  logic                 Plus1,             // do you add one for rounding
   input  logic                 Rs,                // the result's sign
-  input  logic                 Invalid, Overflow, // flags to choose the result
+  input  logic                 Invalid, Overflow, // openhw_flags to choose the result
   input  logic [P.NE-1:0]      Re,                // Result exponent
   input  logic [P.NE+1:0]      FullRe,            // Result full exponent
   input  logic [P.NF-1:0]      Rf,                // Result fraction
   // fma
-  input  logic                 FmaOp,             // is it a fma opperation
+  input  logic                 FmaOp,             // is it a openhw_fma opperation
   // divsqrt
   input  logic                 DivOp,             // is it a divsqrt opperation
   input  logic                 DivByZero,         // divide by zero flag

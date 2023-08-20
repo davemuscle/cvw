@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fdivsqrtcycles import cvw::*;  #(parameter cvw_t P) (
+module openhw_fdivsqrtcycles import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.FMTBITS-1:0] FmtE,
   input  logic                 SqrtE,
   input  logic                 IntDivE,

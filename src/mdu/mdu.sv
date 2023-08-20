@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module mdu import cvw::*;  #(parameter cvw_t P) (
+module openhw_mdu import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset,
   input  logic              StallM, StallW, 
   input  logic              FlushE, FlushM, FlushW,
@@ -51,7 +51,7 @@ module mdu import cvw::*;  #(parameter cvw_t P) (
   assign BMDU = ForwardedSrcBE & {P.XLEN{MDUActiveE}};
 
   // Multiplier
-  mul #(P.XLEN) mul(.clk, .reset, .StallM, .FlushM, .ForwardedSrcAE, .ForwardedSrcBE, .Funct3E, .ProdM);
+  openhw_mul #(P.XLEN) mul(.clk, .reset, .StallM, .FlushM, .ForwardedSrcAE, .ForwardedSrcBE, .Funct3E, .ProdM);
 
   // Divider
   // Start a divide when a new division instruction is received and the divider isn't already busy or finishing
@@ -62,7 +62,7 @@ module mdu import cvw::*;  #(parameter cvw_t P) (
     assign RemM = 0;
     assign DivBusyE = 0;
   end else begin:div
-    div #(P) div(.clk, .reset, .StallM, .FlushE, .DivSignedE(~Funct3E[0]), .W64E, .IntDivE, 
+    openhw_div #(P) div(.clk, .reset, .StallM, .FlushE, .DivSignedE(~Funct3E[0]), .W64E, .IntDivE, 
         .ForwardedSrcAE, .ForwardedSrcBE, .DivBusyE, .QuotM, .RemM);
   end
     
@@ -81,7 +81,7 @@ module mdu import cvw::*;  #(parameter cvw_t P) (
     endcase 
 
   // Handle sign extension for W-type instructions
-  flopenrc #(1) W64MReg(clk, reset, FlushM, ~StallM, W64E, W64M);
+  openhw_flopenrc #(1) W64MReg(clk, reset, FlushM, ~StallM, W64E, W64M);
   if (P.XLEN == 64) begin:resmux // RV64 has W-type instructions
     assign MDUResultM = W64M ? {{32{PrelimResultM[31]}}, PrelimResultM[31:0]} : PrelimResultM;
   end else begin:resmux // RV32 has no W-type instructions
@@ -89,5 +89,5 @@ module mdu import cvw::*;  #(parameter cvw_t P) (
   end
 
   // Writeback stage pipeline register
-  flopenrc #(P.XLEN) MDUResultWReg(clk, reset, FlushW, ~StallW, MDUResultM, MDUResultW);   
+  openhw_flopenrc #(P.XLEN) MDUResultWReg(clk, reset, FlushW, ~StallW, MDUResultM, MDUResultW);   
 endmodule // mdu

@@ -35,7 +35,7 @@
 
 /* verilator lint_off UNOPTFLAT */
 
-module uartPC16550D #(parameter UART_PRESCALE) (
+module openhw_uartPC16550D #(parameter UART_PRESCALE) (
   // Processor Interface
   input  logic       PCLK, PRESETn,                  // UART clock and active low reset
   input  logic [2:0] A,                              // address input (8 registers)
@@ -178,7 +178,7 @@ module uartPC16550D #(parameter UART_PRESCALE) (
       if (~MEMWb & (A == 3'b110))
         MSR <= Din[3:0];
       else if (~MEMRb & (A == 3'b110)) 
-        MSR <= 4'b0; // Reading MSR clears the flags in MSR bits 3:0
+        MSR <= 4'b0; // Reading MSR clears the openhw_flags in MSR bits 3:0
       else begin
         MSR[0] <= MSR[0] | CTSb2 ^ CTSbsync; // Delta Clear to Send
         MSR[1] <= MSR[1] | DSRb2 ^ DSRbsync; // Delta Data Set Ready
@@ -498,7 +498,7 @@ module uartPC16550D #(parameter UART_PRESCALE) (
   // interrupts
   ///////////////////////////////////////////
   
-  assign RXerr = |LSR[4:1]; // LS interrupt if any of the flags are true
+  assign RXerr = |LSR[4:1]; // LS interrupt if any of the openhw_flags are true
   assign RXerrIP = RXerr & ~squashRXerrIP; // intr squashed upon reading LSR
   assign rxdataavailintr = fifoenabled ? rxfifotriggered : rxdataready; 
   assign THRE = fifoenabled ? txfifoempty : ~txhrfull;
@@ -525,12 +525,12 @@ module uartPC16550D #(parameter UART_PRESCALE) (
   assign setSquashRXerrIP = ~MEMRb & (A==3'b101);
   assign resetSquashRXerrIP = (rxstate == UART_DONE);
   assign squashRXerrIP = (prevSquashRXerrIP | setSquashRXerrIP) & ~resetSquashRXerrIP;
-  flopr #(1) squashRXerrIPreg(PCLK, ~PRESETn, squashRXerrIP, prevSquashRXerrIP);
+  openhw_flopr #(1) squashRXerrIPreg(PCLK, ~PRESETn, squashRXerrIP, prevSquashRXerrIP);
   // Side effect of reading IIR is lowering THRE_IP if most significant intr
   assign setSquashTHRE_IP = ~MEMRb & (A==3'b010) & (intrID==3'h1); // there's a 1-cycle delay on set squash so that THRE_IP doesn't change during the process of reading IIR (otherwise combinational loop)
   assign resetSquashTHRE_IP = ~THRE;
   assign squashTHRE_IP = prevSquashTHRE_IP & ~resetSquashTHRE_IP;
-  flopr #(1) squashTHRE_IPreg(PCLK, ~PRESETn, squashTHRE_IP | setSquashTHRE_IP, prevSquashTHRE_IP);
+  openhw_flopr #(1) squashTHRE_IPreg(PCLK, ~PRESETn, squashTHRE_IP | setSquashTHRE_IP, prevSquashTHRE_IP);
 
   ///////////////////////////////////////////
   // modem control logic

@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////`include "wally-config.vh"
 
-module divshiftcalc import cvw::*;  #(parameter cvw_t P) (
+module openhw_divshiftcalc import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.DIVb:0]              DivQm,              // divsqrt significand
   input  logic [P.NE+1:0]              DivQe,              // divsqrt exponent
   output logic [P.LOGNORMSHIFTSZ-1:0]  DivShiftAmt,        // divsqrt shift amount

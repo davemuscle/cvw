@@ -33,7 +33,7 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ///////////////////////////////////////////
 
-module priorityonehot #(parameter N = 8) (
+module openhw_priorityonehot #(parameter N = 8) (
   input  logic  [N-1:0] a,
   output logic  [N-1:0] y
 );

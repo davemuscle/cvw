@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fdivsqrt import cvw::*;  #(parameter cvw_t P) (
+module openhw_fdivsqrt import cvw::*;  #(parameter cvw_t P) (
   input  logic                 clk, 
   input  logic                 reset, 
   input  logic [P.FMTBITS-1:0] FmtE,
@@ -72,7 +72,7 @@ module fdivsqrt import cvw::*;  #(parameter cvw_t P) (
   logic [P.XLEN-1:0]           AM;                           // Original Numerator for postprocessor
   logic                        ISpecialCaseE;                // Integer div/remainder special cases
 
-  fdivsqrtpreproc #(P) fdivsqrtpreproc(                          // Preprocessor
+  openhw_fdivsqrtpreproc #(P) fdivsqrtpreproc(                          // Preprocessor
     .clk, .IFDivStartE, .Xm(XmE), .Ym(YmE), .Xe(XeE), .Ye(YeE),
     .FmtE, .SqrtE, .XZeroE, .Funct3E, .QeM, .X, .D, .CyclesE,
     // Int-specific 
@@ -80,18 +80,18 @@ module fdivsqrt import cvw::*;  #(parameter cvw_t P) (
     .BZeroM, .nM, .mM, .AM, 
     .IntDivM, .W64M, .NegQuotM, .ALTBM, .AsM);
 
-  fdivsqrtfsm #(P) fdivsqrtfsm(                                  // FSM
+  openhw_fdivsqrtfsm #(P) fdivsqrtfsm(                                  // FSM
     .clk, .reset, .XInfE, .YInfE, .XZeroE, .YZeroE, .XNaNE, .YNaNE, 
     .FDivStartE, .XsE, .SqrtE, .WZeroE, .FlushE, .StallM, 
     .FDivBusyE, .IFDivStartE, .FDivDoneE, .SpecialCaseM, .CyclesE,
     // Int-specific 
     .IDivStartE, .ISpecialCaseE, .IntDivE);
 
-  fdivsqrtiter #(P) fdivsqrtiter(                                // CSA Iterator
+  openhw_fdivsqrtiter #(P) fdivsqrtiter(                                // CSA Iterator
     .clk, .IFDivStartE, .FDivBusyE, .SqrtE, .X, .D, 
     .FirstU, .FirstUM, .FirstC, .Firstun, .FirstWS(WS), .FirstWC(WC));
 
-  fdivsqrtpostproc #(P) fdivsqrtpostproc(                        // Postprocessor
+  openhw_fdivsqrtpostproc #(P) fdivsqrtpostproc(                        // Postprocessor
     .clk, .reset, .StallM, .WS, .WC, .D, .FirstU, .FirstUM, .FirstC, 
     .SqrtE, .Firstun, .SqrtM, .SpecialCaseM, 
     .QmM, .WZeroE, .DivStickyM, 

@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fdivsqrtfsm import cvw::*;  #(parameter cvw_t P) (
+module openhw_fdivsqrtfsm import cvw::*;  #(parameter cvw_t P) (
   input  logic                clk, reset, 
   input  logic                XInfE, YInfE, 
   input  logic                XZeroE, YZeroE, 
@@ -58,7 +58,7 @@ module fdivsqrtfsm import cvw::*;  #(parameter cvw_t P) (
   assign FSpecialCaseE = XZeroE | XInfE  | XNaNE |  (XsE&SqrtE) | (YZeroE | YInfE | YNaNE)&~SqrtE;
   if (P.IDIV_ON_FPU) assign SpecialCaseE = IntDivE ? ISpecialCaseE : FSpecialCaseE;
   else              assign SpecialCaseE = FSpecialCaseE;
-  flopenr #(1) SpecialCaseReg(clk, reset, IFDivStartE, SpecialCaseE, SpecialCaseM); // save SpecialCase for checking in fdivsqrtpostproc
+  openhw_flopenr #(1) SpecialCaseReg(clk, reset, IFDivStartE, SpecialCaseE, SpecialCaseM); // save SpecialCase for checking in fdivsqrtpostproc
 
   always_ff @(posedge clk) begin
       if (reset | FlushE) begin

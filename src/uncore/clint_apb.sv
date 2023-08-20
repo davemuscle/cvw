@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module clint_apb import cvw::*;  #(parameter cvw_t P) (
+module openhw_clint_apb import cvw::*;  #(parameter cvw_t P) (
   input  logic                PCLK, PRESETn,
   input  logic                PSEL,
   input  logic [15:0]         PADDR, 
@@ -149,7 +149,7 @@ module clint_apb import cvw::*;  #(parameter cvw_t P) (
 
 endmodule
 
-module timeregsync  import cvw::*;  #(parameter cvw_t P) (
+module openhw_timeregsync  import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, resetn, 
   input  logic              we0, we1,
   input  logic [P.XLEN-1:0] wd,
@@ -168,7 +168,7 @@ module timeregsync  import cvw::*;  #(parameter cvw_t P) (
       else          q <= q + 1;
 endmodule
 
-module timereg  import cvw::*;  #(parameter cvw_t P) (
+module openhw_timereg  import cvw::*;  #(parameter cvw_t P) (
   input  logic              PCLK, PRESETn, TIMECLK,
   input  logic              we0, we1,
   input  logic [P.XLEN-1:0] PWDATA,
@@ -180,14 +180,14 @@ module timereg  import cvw::*;  #(parameter cvw_t P) (
     timregsync timeregsync(.clk(PCLK), .resetn(PRESETn), .we0, .we1, .wd(PWDATA), .q(MTIME));
     assign done = 1;   // immediately completes
   end else begin       // use asynchronous TIMECLK 
-    // TIME counter runs on TIMECLK but bus interface runs on PCLK
+    // TIME openhw_counter runs on TIMECLK but bus interface runs on PCLK
     // Need to synchronize reads and writes
-    // This is subtle because synchronizing a binary counter on a per-bit basis could give a mix of old and new bits
-    // Instead, we use a Gray coded counter that only changes one bit per cycle
+    // This is subtle because synchronizing a binary openhw_counter on a per-bit basis could give a mix of old and new bits
+    // Instead, we use a Gray coded openhw_counter that only changes one bit per cycle
     // Synchronizing this for a read is safe because we are guaranteed to get either the old or the new value.
-    // Writing to the counter requires a request/acknowledge handshake to ensure the write value is held long enough.
+    // Writing to the openhw_counter requires a request/acknowledge handshake to ensure the write value is held long enough.
     // The handshake signals are synchronized in each direction across the interface
-    // There is no back pressure on instructions, so if multiple counter writes occur ***
+    // There is no back pressure on instructions, so if multiple openhw_counter writes occur ***
 
     logic req, req_sync, ack, we0_stored, we1_stored, ack_stored, resetn_sync;
     logic [P.XLEN-1:0] wd_stored;
@@ -214,16 +214,16 @@ module timereg  import cvw::*;  #(parameter cvw_t P) (
     // synchronize the acknowledge back to the PCLK domain to indicate the request was handled and can be lowered
     sync async(PCLK, req_sync, ack);
 
-    timeregsync #(P) timeregsync(.clk(TIMECLK), .resetn(resetn_sync), .we0(we0_stored), .we1(we1_stored), .wd(wd_stored), .q(time_int));
-    binarytogray b2g(time_int, time_int_gc);
-    flop gcreg(TIMECLK, time_int_gc, time_gc);
+    openhw_timeregsync #(P) timeregsync(.clk(TIMECLK), .resetn(resetn_sync), .we0(we0_stored), .we1(we1_stored), .wd(wd_stored), .q(time_int));
+    openhw_binarytogray b2g(time_int, time_int_gc);
+    openhw_flop gcreg(TIMECLK, time_int_gc, time_gc);
 
     sync timesync[63:0](PCLK, time_gc, MTIME_GC); 
-    graytobinary g2b(MTIME_GC, MTIME);
+    openhw_graytobinary g2b(MTIME_GC, MTIME);
   end
 endmodule
 
-module binarytogray #(parameter N) (
+module openhw_binarytogray #(parameter N) (
   input  logic [N-1:0] b,
   output logic [N-1:0] g);
 
@@ -232,7 +232,7 @@ module binarytogray #(parameter N) (
   assign g = b ^ {1'b0, b[N-1:1]};
 endmodule
 
-module graytobinary #(parameter N) (
+module openhw_graytobinary #(parameter N) (
   input  logic [N-1:0] g,
   output logic [N-1:0] b);
 

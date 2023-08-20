@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module wallypipelinedsoc import cvw::*; #(parameter cvw_t P)  (
+module openhw_wallypipelinedsoc import cvw::*; #(parameter cvw_t P)  (
   input  logic                clk, 
   input  logic                reset_ext,        // external asynchronous reset pin
   output logic                reset,            // reset synchronized to clk to prevent races on release
@@ -35,7 +35,7 @@ module wallypipelinedsoc import cvw::*; #(parameter cvw_t P)  (
   input  logic                HREADYEXT, HRESPEXT,
   output logic                HSELEXT,
   output logic                HSELEXTSDC, 
-  // outputs to external memory, shared with uncore memory
+  // outputs to external memory, shared with openhw_uncore memory
   output logic                HCLK, HRESETn,
   output logic [P.PA_BITS-1:0]  HADDR,
   output logic [P.AHBW-1:0]     HWDATA,
@@ -65,18 +65,18 @@ module wallypipelinedsoc import cvw::*; #(parameter cvw_t P)  (
   logic                       MExtInt,SExtInt;  // from PLIC
 
   // synchronize reset to SOC clock domain
-  synchronizer resetsync(.clk, .d(reset_ext), .q(reset)); 
+  openhw_synchronizer resetsync(.clk, .d(reset_ext), .q(reset)); 
    
   // instantiate processor and internal memories
-  wallypipelinedcore #(P) core(.clk, .reset,
+  openhw_wallypipelinedcore #(P) core(.clk, .reset,
     .MTimerInt, .MExtInt, .SExtInt, .MSwInt, .MTIME_CLINT,
     .HRDATA, .HREADY, .HRESP, .HCLK, .HRESETn, .HADDR, .HWDATA, .HWSTRB,
     .HWRITE, .HSIZE, .HBURST, .HPROT, .HTRANS, .HMASTLOCK
    );
 
-  // instantiate uncore if a bus interface exists
+  // instantiate openhw_uncore if a bus interface exists
   if (P.BUS_SUPPORTED) begin : uncore
-    uncore #(P) uncore(.HCLK, .HRESETn, .TIMECLK,
+    openhw_uncore #(P) uncore(.HCLK, .HRESETn, .TIMECLK,
       .HADDR, .HWDATA, .HWSTRB, .HWRITE, .HSIZE, .HBURST, .HPROT, .HTRANS, .HMASTLOCK, .HRDATAEXT,
       .HREADYEXT, .HRESPEXT, .HRDATA, .HREADY, .HRESP, .HSELEXT, .HSELEXTSDC,
       .MTimerInt, .MSwInt, .MExtInt, .SExtInt, .GPIOIN, .GPIOOUT, .GPIOEN, .UARTSin, 

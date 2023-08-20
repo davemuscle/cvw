@@ -26,11 +26,11 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fmasign (
+module openhw_fmasign (
   input  logic [2:0]  OpCtrl,     // opperation contol
   input  logic        Xs, Ys, Zs, // sign of the inputs
   output logic        Ps,         // the product's sign - takes opperation into account
-  output logic        As,         // aligned addend sign used in fma - takes opperation into account
+  output logic        As,         // aligned addend sign used in openhw_fma - takes opperation into account
   output logic        InvA        // Effective subtraction: invert addend
 );
 

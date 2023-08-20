@@ -30,7 +30,7 @@
 `define BURST_EN 1         // Enables burst mode.  Disable to show the lost performance.
 
 // HCLK and clk must be the same clock!
-module buscachefsm #(
+module openhw_buscachefsm #(
   parameter BeatCountThreshold,                      // Largest beat index
   parameter AHBWLOGBWPL,                             // Log2 of BEATSPERLINE
   parameter READ_ONLY_CACHE
@@ -45,17 +45,17 @@ module buscachefsm #(
   output logic                   BusStall,           // Bus is busy with an in flight memory operation
   output logic                   BusCommitted,       // Bus is busy with an in flight memory operation and it is not safe to take an interrupt
                             
-  // ahb cache interface locals.            
+  // ahb openhw_cache interface locals.            
   output logic                   CaptureEn,          // Enable updating the Fetch buffer with valid data from HRDATA
                             
-  // cache interface                  
+  // openhw_cache interface                  
   input  logic [1:0]             CacheBusRW,         // Cache bus operation, 01: writeback, 10: fetch
   output logic                   CacheBusAck,        // Handshack to $ indicating bus transaction completed
   
-  // lsu interface
-  output logic [AHBWLOGBWPL-1:0] BeatCount,          // Beat position within the cache line in the Address Phase
-  output logic [AHBWLOGBWPL-1:0] BeatCountDelayed,   // Beat within the cache line in the second (Data) cache stage
-  output logic                   SelBusBeat,         // Tells the cache to select the word from ReadData or WriteData from BeatCount rather than PAdr
+  // openhw_lsu interface
+  output logic [AHBWLOGBWPL-1:0] BeatCount,          // Beat position within the openhw_cache line in the Address Phase
+  output logic [AHBWLOGBWPL-1:0] BeatCountDelayed,   // Beat within the openhw_cache line in the second (Data) openhw_cache stage
+  output logic                   SelBusBeat,         // Tells the openhw_cache to select the word from ReadData or WriteData from BeatCount rather than PAdr
 
   // BUS interface
   input  logic                   HREADY,             // AHB peripheral ready
@@ -104,8 +104,8 @@ module buscachefsm #(
 
   // IEU, LSU, and IFU controls
   // Used to store data from data phase of AHB.
-  flopenr #(AHBWLOGBWPL) BeatCountReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, NextBeatCount, BeatCount);  
-  flopenr #(AHBWLOGBWPL) BeatCountDelayedReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, BeatCount, BeatCountDelayed);
+  openhw_flopenr #(AHBWLOGBWPL) BeatCountReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, NextBeatCount, BeatCount);  
+  openhw_flopenr #(AHBWLOGBWPL) BeatCountDelayedReg(HCLK, ~HRESETn | BeatCntReset, BeatCntEn, BeatCount, BeatCountDelayed);
   assign NextBeatCount = BeatCount + 1'b1;
 
   assign FinalBeatCount = BeatCountDelayed == BeatCountThreshold[AHBWLOGBWPL-1:0];

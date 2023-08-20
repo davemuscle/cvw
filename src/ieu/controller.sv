@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module controller import cvw::*;  #(parameter cvw_t P) (
+module openhw_controller import cvw::*;  #(parameter cvw_t P) (
   input  logic        clk, reset,
   // Decode stage control signals
   input  logic        StallD, FlushD,          // Stall, flush Decode stage
@@ -41,9 +41,9 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   output logic        BranchD,                 // Branch instruction
    // Execute stage control signals             
   input  logic        StallE, FlushE,          // Stall, flush Execute stage
-  input  logic [1:0]  FlagsE,                  // Comparison flags ({eq, lt})
+  input  logic [1:0]  FlagsE,                  // Comparison openhw_flags ({eq, lt})
   input  logic        FWriteIntE,              // Write integer register, coming from FPU controller
-  output logic        PCSrcE,                  // Select signal to choose next PC (for datapath and Hazard unit)
+  output logic        PCSrcE,                  // Select signal to choose next PC (for openhw_datapath and Hazard unit)
   output logic        ALUSrcAE, ALUSrcBE,      // ALU operands
   output logic        ALUResultSrcE,           // Selects result to pass on to Memory stage
   output logic [2:0]  ALUSelectE,              // ALU mux select signal
@@ -69,13 +69,13 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   // Memory stage control signals
   input  logic        StallM, FlushM,          // Stall, flush Memory stage
   output logic [1:0]  MemRWM,                  // Mem read/write: MemRWM[1] = 1 for read, MemRWM[0] = 1 for write 
-  output logic        CSRReadM, CSRWriteM, PrivilegedM, // CSR read, write, or privileged instruction
+  output logic        CSRReadM, CSRWriteM, PrivilegedM, // CSR read, write, or openhw_privileged instruction
   output logic [1:0]  AtomicM,                 // Atomic (AMO) instruction
   output logic [2:0]  Funct3M,                 // Instruction's funct3 field
   output logic        RegWriteM,               // Instruction writes a register (needed for Hazard unit)
   output logic        InvalidateICacheM, FlushDCacheM, // Invalidate I$, flush D$
   output logic        InstrValidD, InstrValidE, InstrValidM, // Instruction is valid
-  output logic        FWriteIntM,              // FPU controller writes integer register file
+  output logic        FWriteIntM,              // FPU openhw_controller writes integer register file
   // Writeback stage control signals
   input  logic        StallW, FlushW,          // Stall, flush Writeback stage
   output logic        RegWriteW, IntDivW,      // Instruction writes a register, is an integer divide
@@ -116,7 +116,7 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   logic        PrivilegedD, PrivilegedE;       // Privileged instruction
   logic        InvalidateICacheE, FlushDCacheE;// Invalidate I$, flush D$
   logic [`CTRLW-1:0] ControlsD;                // Main Instruction Decoder control signals
-  logic        SubArithD;                      // TRUE for R-type subtracts and sra, slt, sltu or B-type ext clr, andn, orn, xnor
+  logic        SubArithD;                      // TRUE for R-type subtracts and sra, slt, sltu or B-type openhw_ext clr, andn, orn, xnor
   logic        subD, sraD, sltD, sltuD;        // Indicates if is one of these instructions
   logic        ALUOpE;                         // 0 for address generationm 1 for ALU operations
   logic        BranchTakenE;                   // Branch is taken
@@ -124,7 +124,7 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   logic        unused; 
   logic        BranchFlagE;                    // Branch flag to use (chosen between eq or lt)
   logic        IEURegWriteE;                   // Register write 
-  logic        BRegWriteE;                     // Register write from BMU controller in Execute Stage
+  logic        BRegWriteE;                     // Register write from BMU openhw_controller in Execute Stage
   logic        IllegalERegAdrD;                // RV32E attempts to write upper 16 registers
   logic [1:0]  AtomicE;                        // Atomic instruction 
   logic        FenceD, FenceE;                 // Fence instruction
@@ -138,9 +138,9 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   logic        JRFunctD;                       // detect jalr instruction
   logic        FenceFunctD;                    // Detect fence instruction
   logic        CMOFunctD;                      // Detect CMO instruction
-  logic        AFunctD, AMOFunctD;             // Detect atomic instructions
+  logic        AFunctD, AMOFunctD;             // Detect openhw_atomic instructions
   logic        RWFunctD, MWFunctD;             // detect RW/MW instructions
-  logic        PFunctD, CSRFunctD;             // detect privileged / CSR instruction
+  logic        PFunctD, CSRFunctD;             // detect openhw_privileged / CSR instruction
   logic        FenceM;                         // Fence.I or sfence.VMA instruction in memory stage
   logic [2:0]  ALUSelectD;                     // ALU Output selection mux control
   logic        IWValidFunct3D;                 // Detects if Funct3 is valid for IW instructions
@@ -218,7 +218,7 @@ module controller import cvw::*;  #(parameter cvw_t P) (
     assign SFunctD = 1; // don't bother to check Funct3 for stores
     assign BFunctD = 1; // don't bother to check Funct3 for branches
     assign JRFunctD = 1; // don't bother to check Funct3 for jalrs
-    assign PFunctD = 1; // don't bother to check fields for privileged instructions
+    assign PFunctD = 1; // don't bother to check fields for openhw_privileged instructions
     assign CSRFunctD = 1; // don't bother to check Funct3 for CSR operations
     assign IWValidFunct3D = 1;
   end
@@ -274,7 +274,7 @@ module controller import cvw::*;  #(parameter cvw_t P) (
       7'b1101111:     ControlsD = `CTRLW'b1_011_11_00_000_0_0_1_1_0_0_0_0_0_00_0_0; // jal
       7'b1110011: if (P.ZICSR_SUPPORTED) begin
                    if (PFunctD)
-                      ControlsD = `CTRLW'b0_000_00_00_000_0_0_0_0_0_0_1_0_0_00_0_0; // privileged; decoded further in privdec modules
+                      ControlsD = `CTRLW'b0_000_00_00_000_0_0_0_0_0_0_1_0_0_00_0_0; // privileged; decoded further in openhw_privdec modules
                    else if (CSRFunctD)
                       ControlsD = `CTRLW'b1_000_00_00_010_0_0_0_0_0_1_0_0_0_00_0_0; // csrs
                   end
@@ -308,9 +308,9 @@ module controller import cvw::*;  #(parameter cvw_t P) (
     logic BRegWriteD;                     // Indicates if it is a R type BMU instruction in decode stage
     logic BW64D;                          // Indicates if it is a W type BMU instruction in decode stage
     logic BSubArithD;                     // TRUE for BMU ext, clr, andn, orn, xnor
-    logic BALUSrcBD;                      // BMU alu src select signal
+    logic BALUSrcBD;                      // BMU openhw_alu src select signal
 
-    bmuctrl #(P) bmuctrl(.clk, .reset, .StallD, .FlushD, .InstrD, .ALUOpD, .BSelectD, .ZBBSelectD, 
+    openhw_bmuctrl #(P) bmuctrl(.clk, .reset, .StallD, .FlushD, .InstrD, .ALUOpD, .BSelectD, .ZBBSelectD, 
       .BRegWriteD, .BALUSrcBD, .BW64D, .BSubArithD, .IllegalBitmanipInstrD, .StallE, .FlushE, 
       .ALUSelectD, .BSelectE, .ZBBSelectE, .BRegWriteE, .BALUControlE, .BMUActiveE);
     if (P.ZBA_SUPPORTED) begin
@@ -386,23 +386,23 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   end
 
   // Decode stage pipeline control register
-  flopenrc #(1)  controlregD(clk, reset, FlushD, ~StallD, 1'b1, InstrValidD);
+  openhw_flopenrc #(1)  controlregD(clk, reset, FlushD, ~StallD, 1'b1, InstrValidD);
 
   // Execute stage pipeline control register and logic
-  flopenrc #(35) controlregE(clk, reset, FlushE, ~StallE,
+  openhw_flopenrc #(35) controlregE(clk, reset, FlushE, ~StallE,
                            {ALUSelectD, RegWriteD, ResultSrcD, MemRWD, JumpD, BranchD, ALUSrcAD, ALUSrcBD, ALUResultSrcD, CSRReadD, CSRWriteD, PrivilegedD, Funct3D, W64D, SubArithD, MDUD, AtomicD, InvalidateICacheD, FlushDCacheD, FenceD, CMOpD, IFUPrefetchD, LSUPrefetchD, InstrValidD},
                            {ALUSelectE, IEURegWriteE, ResultSrcE, MemRWE, JumpE, BranchE, ALUSrcAE, ALUSrcBE, ALUResultSrcE, CSRReadE, CSRWriteE, PrivilegedE, Funct3E, W64E, SubArithE, MDUE, AtomicE, InvalidateICacheE, FlushDCacheE, FenceE, CMOpE, IFUPrefetchE, LSUPrefetchE, InstrValidE});
 
   // Branch Logic
-  //  The comparator handles both signed and unsigned branches using BranchSignedE
-  //  Hence, only eq and lt flags are needed
+  //  The openhw_comparator handles both signed and unsigned branches using BranchSignedE
+  //  Hence, only eq and lt openhw_flags are needed
   assign BranchSignedE = (~(Funct3E[2:1] == 2'b11) & BranchE);
   assign {eqE, ltE} = FlagsE;
-  mux2 #(1) branchflagmux(eqE, ltE, Funct3E[2], BranchFlagE);
+  openhw_mux2 #(1) branchflagmux(eqE, ltE, Funct3E[2], BranchFlagE);
   assign BranchTakenE = BranchFlagE ^ Funct3E[0];
   assign PCSrcE = JumpE | BranchE & BranchTakenE;
 
-  // Other execute stage controller signals
+  // Other execute stage openhw_controller signals
   assign MemReadE = MemRWE[1];
   assign SCE = (ResultSrcE == 3'b100);
   assign MDUActiveE = (ResultSrcE == 3'b011);
@@ -410,12 +410,12 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   assign IntDivE = MDUE & Funct3E[2]; // Integer division operation
   
   // Memory stage pipeline control register
-  flopenrc #(25) controlregM(clk, reset, FlushM, ~StallM,
+  openhw_flopenrc #(25) controlregM(clk, reset, FlushM, ~StallM,
                          {RegWriteE, ResultSrcE, MemRWE, CSRReadE, CSRWriteE, PrivilegedE, Funct3E, FWriteIntE, AtomicE, InvalidateICacheE, FlushDCacheE, FenceE, InstrValidE, IntDivE, CMOpE, LSUPrefetchE},
                          {RegWriteM, ResultSrcM, MemRWM, CSRReadM, CSRWriteM, PrivilegedM, Funct3M, FWriteIntM, AtomicM, InvalidateICacheM, FlushDCacheM, FenceM, InstrValidM, IntDivM, CMOpM, LSUPrefetchM});
   
   // Writeback stage pipeline control register
-  flopenrc #(5) controlregW(clk, reset, FlushW, ~StallW,
+  openhw_flopenrc #(5) controlregW(clk, reset, FlushW, ~StallW,
                          {RegWriteM, ResultSrcM, IntDivM},
                          {RegWriteW, ResultSrcW, IntDivW});  
 
@@ -423,7 +423,7 @@ module controller import cvw::*;  #(parameter cvw_t P) (
   assign CSRWriteFenceM = CSRWriteM | FenceM;
 
   // the synchronous DTIM cannot read immediately after write
-  // a cache cannot read or write immediately after a write
-  // atomic operations are also detected as MemRWD[1]
+  // a openhw_cache cannot read or write immediately after a write
+  // openhw_atomic operations are also detected as MemRWD[1]
   assign StoreStallD = MemRWE[0] & ((MemRWD[1] | (MemRWD[0] & P.DCACHE_SUPPORTED)));
 endmodule

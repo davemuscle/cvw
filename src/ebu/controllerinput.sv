@@ -31,7 +31,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module controllerinput #(
+module openhw_controllerinput #(
   parameter PA_BITS, 
   parameter SAVE_ENABLED = 1           // 1: Save manager inputs if Save = 1, 0: Don't save inputs
 )(
@@ -41,14 +41,14 @@ module controllerinput #(
   input  logic                Restore,  // Restore a saved manager inputs when it is finally granted
   input  logic                Disable,  // Suppress HREADY to the non-granted manager
   output logic                Request,  // This manager is making a request
-  // controller input
+  // openhw_controller input
   input  logic [1:0]          HTRANSIn,  // Manager input. AHB transaction type, 00: IDLE, 10 NON_SEQ, 11 SEQ
   input  logic                HWRITEIn,  // Manager input. AHB 0: Read operation 1: Write operation 
   input  logic [2:0]          HSIZEIn,   // Manager input. AHB transaction width
   input  logic [2:0]          HBURSTIn,  // Manager input. AHB burst length
   input  logic [PA_BITS-1:0]  HADDRIn,   // Manager input. AHB address
   output logic                HREADYOut, // Indicate to manager the peripheral is not busy and another manager does not have priority
-  // controller output
+  // openhw_controller output
   output logic [1:0]          HTRANSOut, // Arbitrated manager transaction. AHB transaction type, 00: IDLE, 10 NON_SEQ, 11 SEQ
   output logic                HWRITEOut, // Arbitrated manager transaction. AHB 0: Read operation 1: Write operation 
   output logic [2:0]          HSIZEOut,  // Arbitrated manager transaction. AHB transaction width
@@ -64,10 +64,10 @@ module controllerinput #(
   logic [PA_BITS-1:0]         HADDRSave;
 
   if (SAVE_ENABLED) begin
-    flopenr #(1+3+3+2+PA_BITS) SaveReg(HCLK, ~HRESETn, Save,
+    openhw_flopenr #(1+3+3+2+PA_BITS) SaveReg(HCLK, ~HRESETn, Save,
       {HWRITEIn, HSIZEIn, HBURSTIn, HTRANSIn, HADDRIn}, 
       {HWRITESave, HSIZESave, HBURSTSave, HTRANSSave, HADDRSave});
-    mux2 #(1+3+3+2+PA_BITS) RestorMux({HWRITEIn, HSIZEIn, HBURSTIn, HTRANSIn, HADDRIn}, 
+    openhw_mux2 #(1+3+3+2+PA_BITS) RestorMux({HWRITEIn, HSIZEIn, HBURSTIn, HTRANSIn, HADDRIn}, 
       {HWRITESave, HSIZESave, HBURSTSave, HTRANSSave, HADDRSave},
       Restore,
       {HWRITEOut, HSIZEOut, HBURSTOut, HTRANSOut, HADDROut});

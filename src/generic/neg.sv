@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module neg #(parameter WIDTH = 8) (
+module openhw_neg #(parameter WIDTH = 8) (
   input  logic [WIDTH-1:0] a,
   output logic [WIDTH-1:0] y);
 

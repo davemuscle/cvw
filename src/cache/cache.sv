@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module cache import cvw::*; #(parameter cvw_t P,
+module openhw_cache import cvw::*; #(parameter cvw_t P,
                               parameter PA_BITS, XLEN, LINELEN,  NUMLINES,  NUMWAYS, LOGBWPL, WORDLEN, MUXINTERVAL, READ_ONLY_CACHE) (
   input  logic                   clk,
   input  logic                   reset,
@@ -42,20 +42,20 @@ module cache import cvw::*; #(parameter cvw_t P,
   input  logic [11:0]            NextSet,           // Virtual address, but we only use the lower 12 bits.
   input  logic [PA_BITS-1:0]     PAdr,              // Physical address
   input  logic [(WORDLEN-1)/8:0] ByteMask,          // Which bytes to write (D$ only)
-  input  logic [WORDLEN-1:0]     CacheWriteData,    // Data to write to cache (D$ only)
+  input  logic [WORDLEN-1:0]     CacheWriteData,    // Data to write to openhw_cache (D$ only)
   output logic                   CacheCommitted,    // Cache has started bus operation that shouldn't be interrupted
   output logic                   CacheStall,        // Cache stalls pipeline during multicycle operation
-  output logic [WORDLEN-1:0]     ReadDataWord,      // Word read from cache (goes to CPU and bus)
+  output logic [WORDLEN-1:0]     ReadDataWord,      // Word read from openhw_cache (goes to CPU and bus)
   // to performance counters to cpu
   output logic                   CacheMiss,         // Cache miss
   output logic                   CacheAccess,       // Cache access
-  // lsu control
+  // openhw_lsu control
   input  logic                   SelHPTW,           // Use PAdr from Hardware Page Table Walker rather than NextSet
   // Bus fsm interface
   input  logic                   CacheBusAck,       // Bus operation completed
-  input  logic                   SelBusBeat,        // Word in cache line comes from BeatCount
+  input  logic                   SelBusBeat,        // Word in openhw_cache line comes from BeatCount
   input  logic [LOGBWPL-1:0]     BeatCount,         // Beat in burst
-  input  logic [LINELEN-1:0]     FetchBuffer,       // Buffer long enough to hold entire cache line arriving from bus
+  input  logic [LINELEN-1:0]     FetchBuffer,       // Buffer long enough to hold entire openhw_cache line arriving from bus
   output logic [1:0]             CacheBusRW,        // [1] Read (cache line fetch) or [0] write bus (cache line writeback)
   output logic [PA_BITS-1:0]     CacheBusAdr        // Address for bus access
 );
@@ -66,7 +66,7 @@ module cache import cvw::*; #(parameter cvw_t P,
   localparam                     SETLEN = $clog2(NUMLINES);          // Number of set bits
   localparam                     SETTOP = SETLEN+OFFSETLEN;          // Number of set plus offset bits
   localparam                     TAGLEN = PA_BITS - SETTOP;          // Number of tag bits
-  localparam                     CACHEWORDSPERLINE = LINELEN/WORDLEN;// Number of words in cache line
+  localparam                     CACHEWORDSPERLINE = LINELEN/WORDLEN;// Number of words in openhw_cache line
   localparam                     LOGCWPL = $clog2(CACHEWORDSPERLINE);// Log2 of ^
   localparam                     FLUSHADRTHRESHOLD = NUMLINES - 1;   // Used to determine when flush is complete
   localparam                     LOGLLENBYTES = $clog2(WORDLEN/8);   // Number of bits to address a word
@@ -110,18 +110,18 @@ module cache import cvw::*; #(parameter cvw_t P,
   // The icache must update to the newest PCNextF on flush as it is probably a trap.  Trap
   // sets PCNextF to XTVEC and the icache must start reading the instruction.
   assign AdrSelMuxSel = {SelFlush, ((SelAdr | SelHPTW) & ~((READ_ONLY_CACHE == 1) & FlushStage))};
-  mux3 #(SETLEN) AdrSelMux(NextSet[SETTOP-1:OFFSETLEN], PAdr[SETTOP-1:OFFSETLEN], FlushAdr,
+  openhw_mux3 #(SETLEN) AdrSelMux(NextSet[SETTOP-1:OFFSETLEN], PAdr[SETTOP-1:OFFSETLEN], FlushAdr,
     AdrSelMuxSel, CacheSet);
 
-  // Array of cache ways, along with victim, hit, dirty, and read merging logic
-  cacheway #(P, PA_BITS, XLEN, NUMLINES, LINELEN, TAGLEN, OFFSETLEN, SETLEN, READ_ONLY_CACHE) CacheWays[NUMWAYS-1:0](
+  // Array of openhw_cache ways, along with victim, hit, dirty, and read merging logic
+  openhw_cacheway #(P, PA_BITS, XLEN, NUMLINES, LINELEN, TAGLEN, OFFSETLEN, SETLEN, READ_ONLY_CACHE) CacheWays[NUMWAYS-1:0](
     .clk, .reset, .CacheEn, .CacheSet, .PAdr, .LineWriteData, .LineByteMask,
     .SetValid, .SetDirty, .ClearDirty, .SelWriteback, .VictimWay,
     .FlushWay, .SelFlush, .ReadDataLineWay, .HitWay, .ValidWay, .DirtyWay, .TagWay, .FlushStage, .InvalidateCache);
 
   // Select victim way for associative caches
   if(NUMWAYS > 1) begin:vict
-    cacheLRU #(NUMWAYS, SETLEN, OFFSETLEN, NUMLINES) cacheLRU(
+    openhw_cacheLRU #(NUMWAYS, SETLEN, OFFSETLEN, NUMLINES) cacheLRU(
       .clk, .reset, .CacheEn, .HitWay, .ValidWay, .VictimWay, .CacheSet, .LRUWriteEn,
       .SetValid, .PAdr(PAdr[SETTOP-1:OFFSETLEN]), .InvalidateCache, .FlushCache);
   end else 
@@ -130,29 +130,29 @@ module cache import cvw::*; #(parameter cvw_t P,
   assign CacheHit = |HitWay;
   assign LineDirty = |DirtyWay;
 
-  // ReadDataLineWay is a 2d array of cache line len by number of ways.
+  // ReadDataLineWay is a 2d array of openhw_cache line len by number of ways.
   // Need to OR together each way in a bitwise manner.
   // Final part of the AO Mux.  First is the AND in the cacheway.
-  or_rows #(NUMWAYS, LINELEN) ReadDataAOMux(.a(ReadDataLineWay), .y(ReadDataLineCache));
-  or_rows #(NUMWAYS, TAGLEN) TagAOMux(.a(TagWay), .y(Tag));
+  openhw_or_rows #(NUMWAYS, LINELEN) ReadDataAOMux(.a(ReadDataLineWay), .y(ReadDataLineCache));
+  openhw_or_rows #(NUMWAYS, TAGLEN) TagAOMux(.a(TagWay), .y(Tag));
 
-  // Data cache needs to choose word offset from PAdr or BeatCount to writeback dirty lines
+  // Data openhw_cache needs to choose word offset from PAdr or BeatCount to writeback dirty lines
   if(!READ_ONLY_CACHE) 
-    mux2 #(LOGBWPL) WordAdrrMux(.d0(PAdr[$clog2(LINELEN/8) - 1 : $clog2(MUXINTERVAL/8)]), 
+    openhw_mux2 #(LOGBWPL) WordAdrrMux(.d0(PAdr[$clog2(LINELEN/8) - 1 : $clog2(MUXINTERVAL/8)]), 
       .d1(BeatCount), .s(SelBusBeat),
       .y(WordOffsetAddr)); 
   else 
     assign WordOffsetAddr = PAdr[$clog2(LINELEN/8) - 1 : $clog2(MUXINTERVAL/8)];
   
-  // Bypass cache array to save a cycle when finishing a load miss
-  mux2 #(LINELEN) EarlyReturnMux(ReadDataLineCache, FetchBuffer, SelFetchBuffer, ReadDataLine);
+  // Bypass openhw_cache array to save a cycle when finishing a load miss
+  openhw_mux2 #(LINELEN) EarlyReturnMux(ReadDataLineCache, FetchBuffer, SelFetchBuffer, ReadDataLine);
 
-  // Select word from cache line
-  subcachelineread #(LINELEN, WORDLEN, MUXINTERVAL) subcachelineread(
+  // Select word from openhw_cache line
+  openhw_subcachelineread #(LINELEN, WORDLEN, MUXINTERVAL) subcachelineread(
     .PAdr(WordOffsetAddr), .ReadDataLine, .ReadDataWord);
   
   // Bus address for fetch, writeback, or flush writeback
-  mux3 #(PA_BITS) CacheBusAdrMux(.d0({PAdr[PA_BITS-1:OFFSETLEN], {OFFSETLEN{1'b0}}}),
+  openhw_mux3 #(PA_BITS) CacheBusAdrMux(.d0({PAdr[PA_BITS-1:OFFSETLEN], {OFFSETLEN{1'b0}}}),
     .d1({Tag, PAdr[SETTOP-1:OFFSETLEN], {OFFSETLEN{1'b0}}}),
     .d2({Tag, FlushAdr, {OFFSETLEN{1'b0}}}),
     .s({SelFlush, SelWriteback}), .y(CacheBusAdr));
@@ -164,23 +164,23 @@ module cache import cvw::*; #(parameter cvw_t P,
     logic [CACHEWORDSPERLINE-1:0]  MemPAdrDecoded;
     logic [LINELEN/8-1:0]          DemuxedByteMask, FetchBufferByteSel;
 
-    // Adjust byte mask from word to cache line
-    onehotdecoder #(LOGCWPL) adrdec(.bin(PAdr[LOGCWPL+LOGLLENBYTES-1:LOGLLENBYTES]), .decoded(MemPAdrDecoded));
+    // Adjust byte mask from word to openhw_cache line
+    openhw_onehotdecoder #(LOGCWPL) adrdec(.bin(PAdr[LOGCWPL+LOGLLENBYTES-1:LOGLLENBYTES]), .decoded(MemPAdrDecoded));
     for(index = 0; index < 2**LOGCWPL; index++) begin
       assign DemuxedByteMask[(index+1)*(WORDLEN/8)-1:index*(WORDLEN/8)] = MemPAdrDecoded[index] ? ByteMask : '0;
     end
     assign FetchBufferByteSel = SetValid & ~SetDirty ? '1 : ~DemuxedByteMask;  // If load miss set all muxes to 1.
 
-    // Merge write data into fetched cache line for store miss
+    // Merge write data into fetched openhw_cache line for store miss
     for(index = 0; index < LINELEN/8; index++) begin
-      mux2 #(8) WriteDataMux(.d0(CacheWriteData[(8*index)%WORDLEN+7:(8*index)%WORDLEN]),
+      openhw_mux2 #(8) WriteDataMux(.d0(CacheWriteData[(8*index)%WORDLEN+7:(8*index)%WORDLEN]),
         .d1(FetchBuffer[8*index+7:8*index]), .s(FetchBufferByteSel[index]), .y(LineWriteData[8*index+7:8*index]));
     end
     assign LineByteMask = SetValid ? '1 : SetDirty ? DemuxedByteMask : '0;
   end
   else
     begin:WriteSelLogic
-      // No need for this mux if the cache does not handle writes.
+      // No need for this mux if the openhw_cache does not handle writes.
       assign LineWriteData = FetchBuffer;
       assign LineByteMask = '1;
     end
@@ -192,13 +192,13 @@ module cache import cvw::*; #(parameter cvw_t P,
   if (!READ_ONLY_CACHE) begin:flushlogic
     // Flush address (line number)
     assign ResetOrFlushCntRst = reset | FlushCntRst;
-    flopenr #(SETLEN) FlushAdrReg(clk, ResetOrFlushCntRst, FlushAdrCntEn, FlushAdrP1, NextFlushAdr);
-    mux2    #(SETLEN) FlushAdrMux(NextFlushAdr, FlushAdrP1, FlushAdrCntEn, FlushAdr);
+    openhw_flopenr #(SETLEN) FlushAdrReg(clk, ResetOrFlushCntRst, FlushAdrCntEn, FlushAdrP1, NextFlushAdr);
+    openhw_mux2    #(SETLEN) FlushAdrMux(NextFlushAdr, FlushAdrP1, FlushAdrCntEn, FlushAdr);
     assign FlushAdrP1 = NextFlushAdr + 1'b1;
     assign FlushAdrFlag = (NextFlushAdr == FLUSHADRTHRESHOLD[SETLEN-1:0]);
 
     // Flush way
-    flopenl #(NUMWAYS) FlushWayReg(clk, FlushWayCntEn, ResetOrFlushCntRst, {{NUMWAYS-1{1'b0}}, 1'b1}, NextFlushWay, FlushWay);
+    openhw_flopenl #(NUMWAYS) FlushWayReg(clk, FlushWayCntEn, ResetOrFlushCntRst, {{NUMWAYS-1{1'b0}}, 1'b1}, NextFlushWay, FlushWay);
     if(NUMWAYS > 1) assign NextFlushWay = {FlushWay[NUMWAYS-2:0], FlushWay[NUMWAYS-1]};
     else            assign NextFlushWay = FlushWay[NUMWAYS-1];
     assign FlushWayFlag = FlushWay[NUMWAYS-1];
@@ -212,7 +212,7 @@ module cache import cvw::*; #(parameter cvw_t P,
   // Cache FSM
   /////////////////////////////////////////////////////////////////////////////////////////////
   
-  cachefsm #(READ_ONLY_CACHE) cachefsm(.clk, .reset, .CacheBusRW, .CacheBusAck, 
+  openhw_cachefsm #(READ_ONLY_CACHE) cachefsm(.clk, .reset, .CacheBusRW, .CacheBusAck, 
     .FlushStage, .CacheRW, .CacheAtomic, .Stall,
     .CacheHit, .LineDirty, .CacheStall, .CacheCommitted, 
     .CacheMiss, .CacheAccess, .SelAdr, 

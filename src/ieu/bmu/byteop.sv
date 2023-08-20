@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module byteop #(parameter WIDTH=32) (
+module openhw_byteop #(parameter WIDTH=32) (
   input  logic [WIDTH-1:0] A,             // Operands
   input  logic             ByteSelect,    // LSB of Immediate
   output logic [WIDTH-1:0] ByteResult);   // rev8, orcb result
@@ -40,5 +40,5 @@ module byteop #(parameter WIDTH=32) (
     assign Rev8Result[WIDTH-i-1:WIDTH-i-8] = A[i+7:i];
   end
 
-  mux2 #(WIDTH) bytemux(Rev8Result, OrcBResult, ByteSelect, ByteResult);
+  openhw_mux2 #(WIDTH) bytemux(Rev8Result, OrcBResult, ByteSelect, ByteResult);
 endmodule

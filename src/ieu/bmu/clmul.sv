@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module clmul #(parameter WIDTH=32) (
+module openhw_clmul #(parameter WIDTH=32) (
   input  logic [WIDTH-1:0] X, Y,             // Operands
   output logic [WIDTH-1:0] ClmulResult);     // ZBS result
 

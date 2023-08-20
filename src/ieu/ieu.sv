@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module ieu import cvw::*;  #(parameter cvw_t P) (
+module openhw_ieu import cvw::*;  #(parameter cvw_t P) (
   input  logic              clk, reset,
   // Decode stage signals
   input  logic [31:0]       InstrD,                          // Instruction
@@ -70,16 +70,16 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   output logic [4:0]        RdW,                             // Destination register
   input  logic [P.XLEN-1:0] ReadDataW,                       // LSU's read data
   // Hazard unit signals
-  input  logic              StallD, StallE, StallM, StallW,  // Stall signals from hazard unit
+  input  logic              StallD, StallE, StallM, StallW,  // Stall signals from openhw_hazard unit
   input  logic              FlushD, FlushE, FlushM, FlushW,  // Flush signals
-  output logic              FCvtIntStallD, LoadStallD,       // Stall causes from IEU to hazard unit
+  output logic              FCvtIntStallD, LoadStallD,       // Stall causes from IEU to openhw_hazard unit
   output logic              MDUStallD, CSRRdStallD, StoreStallD,
-  output logic              CSRReadM, CSRWriteM, PrivilegedM,// CSR read, CSR write, is privileged instruction
+  output logic              CSRReadM, CSRWriteM, PrivilegedM,// CSR read, CSR write, is openhw_privileged instruction
   output logic              CSRWriteFenceM                   // CSR write or fence instruction needs to flush subsequent instructions
 );
 
   logic [2:0] ImmSrcD;                                       // Select type of immediate extension 
-  logic [1:0] FlagsE;                                        // Comparison flags ({eq, lt})
+  logic [1:0] FlagsE;                                        // Comparison openhw_flags ({eq, lt})
   logic       ALUSrcAE, ALUSrcBE;                            // ALU source operands
   logic [2:0] ResultSrcW;                                    // Selects result in Writeback stage
   logic       ALUResultSrcE;                                 // Selects ALU result to pass on to Memory stage
@@ -101,7 +101,7 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   logic       MDUE;                                          // Multiply/divide instruction
   logic       BMUActiveE;                                    // Bit manipulation instruction being executed
            
-  controller #(P) c(
+  openhw_controller #(P) c(
     .clk, .reset, .StallD, .FlushD, .InstrD, .STATUS_FS, .ENVCFG_CBE, .ImmSrcD,
     .IllegalIEUFPUInstrD, .IllegalBaseInstrD, .StallE, .FlushE, .FlagsE, .FWriteIntE,
     .PCSrcE, .ALUSrcAE, .ALUSrcBE, .ALUResultSrcE, .ALUSelectE, .MemReadE, .CSRReadE, 
@@ -111,7 +111,7 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .RegWriteM, .FlushDCacheM, .InstrValidM, .InstrValidE, .InstrValidD, .FWriteIntM,
     .StallW, .FlushW, .RegWriteW, .IntDivW, .ResultSrcW, .CSRWriteFenceM, .InvalidateICacheM, .StoreStallD);
 
-  datapath #(P) dp(
+  openhw_datapath #(P) dp(
     .clk, .reset, .ImmSrcD, .InstrD, .StallE, .FlushE, .ForwardAE, .ForwardBE, .W64E, .SubArithE,
     .Funct3E, .ALUSrcAE, .ALUSrcBE, .ALUResultSrcE, .ALUSelectE, .JumpE, .BranchSignedE, 
     .PCE, .PCLinkE, .FlagsE, .IEUAdrE, .ForwardedSrcAE, .ForwardedSrcBE, .BSelectE, .ZBBSelectE, .BALUControlE, .BMUActiveE,
@@ -119,7 +119,7 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .StallW, .FlushW, .RegWriteW, .IntDivW, .SquashSCW, .ResultSrcW, .ReadDataW, .FCvtIntResW,
     .CSRReadValW, .MDUResultW, .FIntDivResultW, .Rs1D, .Rs2D, .Rs1E, .Rs2E, .RdE, .RdM, .RdW);             
   
-  forward    fw(
+  openhw_forward    fw(
     .Rs1D, .Rs2D, .Rs1E, .Rs2E, .RdE, .RdM, .RdW,
     .MemReadE, .MDUE, .CSRReadE, .RegWriteM, .RegWriteW,
     .FCvtIntE, .SCE, .ForwardAE, .ForwardBE,

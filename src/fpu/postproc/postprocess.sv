@@ -26,11 +26,11 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module postprocess import cvw::*;  #(parameter cvw_t P) (
+module openhw_postprocess import cvw::*;  #(parameter cvw_t P) (
   // general signals
   input logic                              Xs, Ys,              // input signs
   input logic  [P.NF:0]                    Xm, Ym, Zm,          // input mantissas
-  input logic  [2:0]                       Frm,                 // rounding mode 000 = rount to nearest, ties to even   001 = round twords zero  010 = round down  011 = round up  100 = round to nearest, ties to max magnitude
+  input logic  [2:0]                       Frm,                 // rounding mode 000 = rount to nearest, ties to even   001 = openhw_round twords zero  010 = openhw_round down  011 = openhw_round up  100 = openhw_round to nearest, ties to max magnitude
   input logic  [P.FMTBITS-1:0]             Fmt,                 // precision 1 = double 0 = single
   input logic  [2:0]                       OpCtrl,              // choose which opperation (look below for values)
   input logic                              XZero, YZero,        // inputs are zero
@@ -75,16 +75,16 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   logic                        UfPlus1;              // do you add one (for determining underflow flag)
   logic [P.LOGNORMSHIFTSZ-1:0] ShiftAmt;             // normalization shift amount
   logic [P.NORMSHIFTSZ-1:0]    ShiftIn;              // input to normalization shift
-  logic [P.NORMSHIFTSZ-1:0]    Shifted;              // the ouput of the normalized shifter (before shift correction)
+  logic [P.NORMSHIFTSZ-1:0]    Shifted;              // the ouput of the normalized openhw_shifter (before shift correction)
   logic                        Plus1;                // add one to the final result?
   logic                        Overflow;             // overflow flag used to select results
   logic                        Invalid;              // invalid flag used to select results
   logic                        Guard, Round, Sticky; // bits needed to determine rounding
   logic [P.FMTBITS-1:0]        OutFmt;               // output format
-  // fma signals
+  // openhw_fma signals
   logic [P.NE+1:0]             FmaMe;                // exponent of the normalized sum
   logic                        FmaSZero;             // is the sum zero
-  logic [3*P.NF+5:0]           FmaShiftIn;           // fma shift input
+  logic [3*P.NF+5:0]           FmaShiftIn;           // openhw_fma shift input
   logic [P.NE+1:0]             NormSumExp;           // exponent of the normalized sum not taking into account Subnormal or zero results
   logic                        FmaPreResultSubnorm;  // is the result subnormal - calculated before LZA corection
   logic [$clog2(3*P.NF+5)-1:0] FmaShiftAmt;          // normalization shift amount for fma
@@ -108,7 +108,7 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   logic                        Signed;               // is the opperation with a signed integer?
   logic                        IntToFp;              // is the opperation an int->fp conversion?
   logic                        CvtOp;                // convertion opperation
-  logic                        FmaOp;                // fma opperation
+  logic                        FmaOp;                // openhw_fma opperation
   logic                        DivOp;                // divider opperation
   logic                        InfIn;                // are any of the inputs infinity
   logic                        NaNIn;                // are any of the inputs NaN
@@ -140,13 +140,13 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   ///////////////////////////////////////////////////////////////////////////////
 
   // final claulations before shifting
-  cvtshiftcalc #(P) cvtshiftcalc(.ToInt, .CvtCe, .CvtResSubnormUf, .Xm, .CvtLzcIn,  
+  openhw_cvtshiftcalc #(P) cvtshiftcalc(.ToInt, .CvtCe, .CvtResSubnormUf, .Xm, .CvtLzcIn,  
       .XZero, .IntToFp, .OutFmt, .CvtResUf, .CvtShiftIn);
 
-  fmashiftcalc #(P) fmashiftcalc(.FmaSm, .FmaSCnt, .Fmt, .NormSumExp, .FmaSe,
+  openhw_fmashiftcalc #(P) fmashiftcalc(.FmaSm, .FmaSCnt, .Fmt, .NormSumExp, .FmaSe,
       .FmaSZero, .FmaPreResultSubnorm, .FmaShiftAmt, .FmaShiftIn);
 
-  divshiftcalc #(P) divshiftcalc(.DivQe, .DivQm, .DivResSubnorm, .DivSubnormShiftPos, .DivShiftAmt, .DivShiftIn);
+  openhw_divshiftcalc #(P) divshiftcalc(.DivQe, .DivQm, .DivResSubnorm, .DivSubnormShiftPos, .DivShiftAmt, .DivShiftIn);
 
   // select which unit's output to shift
   always_comb
@@ -170,26 +170,26 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
     endcase
   
   // main normalization shift
-  normshift #(P) normshift (.ShiftIn, .ShiftAmt, .Shifted);
+  openhw_normshift #(P) openhw_normshift (.ShiftIn, .ShiftAmt, .Shifted);
 
   // correct for LZA/divsqrt error
-  shiftcorrection #(P) shiftcorrection(.FmaOp, .FmaPreResultSubnorm, .NormSumExp,
+  openhw_shiftcorrection #(P) shiftcorrection(.FmaOp, .FmaPreResultSubnorm, .NormSumExp,
       .DivResSubnorm, .DivSubnormShiftPos, .DivOp, .DivQe, .Qe, .FmaSZero, .Shifted, .FmaMe, .Mf);
 
   ///////////////////////////////////////////////////////////////////////////////
   // Rounding
   ///////////////////////////////////////////////////////////////////////////////
 
-  // round to nearest even
-  // round to zero
-  // round to -infinity
-  // round to infinity
-  // round to nearest max magnitude
+  // openhw_round to nearest even
+  // openhw_round to zero
+  // openhw_round to -infinity
+  // openhw_round to infinity
+  // openhw_round to nearest max magnitude
 
   // calulate result sign used in rounding unit
-  roundsign roundsign(.FmaOp, .DivOp, .CvtOp, .Sqrt, .FmaSs, .Xs, .Ys, .CvtCs, .Ms);
+  openhw_roundsign roundsign(.FmaOp, .DivOp, .CvtOp, .Sqrt, .FmaSs, .Xs, .Ys, .CvtCs, .Ms);
 
-  round #(P) round(.OutFmt, .Frm, .FmaASticky, .Plus1, .PostProcSel, .CvtCe, .Qe,
+  openhw_round #(P) round(.OutFmt, .Frm, .FmaASticky, .Plus1, .PostProcSel, .CvtCe, .Qe,
       .Ms, .FmaMe, .FmaOp, .CvtOp, .CvtResSubnormUf, .Mf, .ToInt,  .CvtResUf,
       .DivSticky, .DivOp, .UfPlus1, .FullRe, .Rf, .Re, .Sticky, .Round, .Guard, .Me);
 
@@ -197,14 +197,14 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   // Sign calculation
   ///////////////////////////////////////////////////////////////////////////////
 
-  resultsign resultsign(.Frm, .FmaPs, .FmaAs, .Round, .Sticky, .Guard,
+  openhw_resultsign resultsign(.Frm, .FmaPs, .FmaAs, .Round, .Sticky, .Guard,
       .FmaOp, .ZInf, .InfIn, .FmaSZero, .Mult, .Ms, .Rs);
 
   ///////////////////////////////////////////////////////////////////////////////
   // Flags
   ///////////////////////////////////////////////////////////////////////////////
 
-  flags #(P) flags(.XSNaN, .YSNaN, .ZSNaN, .XInf, .YInf, .ZInf, .InfIn, .XZero, .YZero, 
+  openhw_flags #(P) flags(.XSNaN, .YSNaN, .ZSNaN, .XInf, .YInf, .ZInf, .InfIn, .XZero, .YZero, 
               .Xs, .Sqrt, .ToInt, .IntToFp, .Int64, .Signed, .OutFmt, .CvtCe,
               .NaNIn, .FmaAs, .FmaPs, .Round, .IntInvalid, .DivByZero,
               .Guard, .Sticky, .UfPlus1, .CvtOp, .DivOp, .FmaOp, .FullRe, .Plus1,
@@ -214,9 +214,9 @@ module postprocess import cvw::*;  #(parameter cvw_t P) (
   // Select the result
   ///////////////////////////////////////////////////////////////////////////////
 
-  negateintres #(P) negateintres(.Xs, .Shifted, .Signed, .Int64, .Plus1, .CvtNegResMsbs, .CvtNegRes);
+  openhw_negateintres #(P) negateintres(.Xs, .Shifted, .Signed, .Int64, .Plus1, .CvtNegResMsbs, .CvtNegRes);
 
-  specialcase #(P) specialcase(.Xs, .Xm, .Ym, .Zm, .XZero, .IntInvalid,
+  openhw_specialcase #(P) specialcase(.Xs, .Xm, .Ym, .Zm, .XZero, .IntInvalid,
       .IntZero, .Frm, .OutFmt, .XNaN, .YNaN, .ZNaN, .CvtResUf, 
       .NaNIn, .IntToFp, .Int64, .Signed, .CvtOp, .FmaOp, .Plus1, .Invalid, .Overflow, .InfIn, .CvtNegRes,
       .XInf, .YInf, .DivOp, .DivByZero, .FullRe, .CvtCe, .Rs, .Re, .Rf, .PostProcRes, .FCvtIntRes);

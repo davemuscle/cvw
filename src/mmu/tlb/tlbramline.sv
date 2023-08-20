@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module tlbramline #(parameter WIDTH = 22)
+module openhw_tlbramline #(parameter WIDTH = 22)
   (input  logic             clk, reset,
    input  logic             re, we,
    input  logic [WIDTH-1:0] d,
@@ -35,7 +35,7 @@ module tlbramline #(parameter WIDTH = 22)
 
    logic [WIDTH-1:0] line;
 
-   flopenr #(WIDTH) pteflop(clk, reset, we, d, line);
+   openhw_flopenr #(WIDTH) pteflop(clk, reset, we, d, line);
    assign q = re ? line : 0;
    assign PTE_G = line[5]; // send global bit to CAM as part of ASID matching
 endmodule

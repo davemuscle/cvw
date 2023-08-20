@@ -28,7 +28,7 @@
 
 /* verilator lint_off UNOPTFLAT */
 
-module divstep #(parameter XLEN) (
+module openhw_divstep #(parameter XLEN) (
   input  logic [XLEN-1:0] W,     // Residual in
   input  logic [XLEN-1:0] XQ,    // bits of dividend X and quotient Q in
   input  logic [XLEN-1:0] DAbsB, // complement of absolute value of divisor D (for subtraction)
@@ -41,9 +41,9 @@ module divstep #(parameter XLEN) (
   logic qi, qib;                  // Quotient digit and its complement
   
   assign {WShift, XQOut} = {W[XLEN-2:0], XQ, qi};  // shift W and X/Q left, insert quotient bit at bottom
-  adder #(XLEN+1) wdsub({1'b0, WShift}, {1'b1, DAbsB}, {qib, WPrime}); // effective subtractor, carry out determines quotient bit
+  openhw_adder #(XLEN+1) wdsub({1'b0, WShift}, {1'b1, DAbsB}, {qib, WPrime}); // effective subtractor, carry out determines quotient bit
   assign qi = ~qib;
-  mux2 #(XLEN) wrestoremux(WShift, WPrime, qi, WOut); // if quotient is zero, restore W
+  openhw_mux2 #(XLEN) wrestoremux(WShift, WPrime, qi, WOut); // if quotient is zero, restore W
 endmodule
 
 /* verilator lint_on UNOPTFLAT */

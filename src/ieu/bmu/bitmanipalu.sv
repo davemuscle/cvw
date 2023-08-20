@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module bitmanipalu import cvw::*; #(parameter cvw_t P, 
+module openhw_bitmanipalu import cvw::*; #(parameter cvw_t P, 
                      parameter WIDTH=32) (
   input  logic [WIDTH-1:0] A, B,                    // Operands
   input  logic             W64,                     // W64-type instruction
@@ -62,14 +62,14 @@ module bitmanipalu import cvw::*; #(parameter cvw_t P,
 
   // Mask Generation Mux
   if (P.ZBS_SUPPORTED) begin: zbsdec
-    decoder #($clog2(WIDTH)) maskgen(BBMU[$clog2(WIDTH)-1:0], MaskB);
-    mux2 #(WIDTH) maskmux(B, MaskB, Mask, CondMaskB);
+    openhw_decoder #($clog2(WIDTH)) maskgen(BBMU[$clog2(WIDTH)-1:0], MaskB);
+    openhw_mux2 #(WIDTH) maskmux(B, MaskB, Mask, CondMaskB);
   end else assign CondMaskB = B;
  
   // 0-3 bit Pre-Shift Mux
   if (P.ZBA_SUPPORTED) begin: zbapreshift
     if (WIDTH == 64) begin
-      mux2 #(64) zextmux(A, {{32{1'b0}}, A[31:0]}, W64, CondZextA); 
+      openhw_mux2 #(64) zextmux(A, {{32{1'b0}}, A[31:0]}, W64, CondZextA); 
     end else assign CondZextA = A;
     assign PreShiftAmt = Funct3[2:1] & {2{PreShift}};
     assign CondShiftA = CondZextA << (PreShiftAmt);
@@ -80,17 +80,17 @@ module bitmanipalu import cvw::*; #(parameter cvw_t P,
 
   // Bit reverse needed for some ZBB, ZBC instructions
   if (P.ZBC_SUPPORTED | P.ZBB_SUPPORTED) begin: bitreverse
-    bitreverse #(WIDTH) brA(.A(ABMU), .RevA);
+    openhw_bitreverse #(WIDTH) brA(.A(ABMU), .RevA);
   end
 
   // ZBC Unit
   if (P.ZBC_SUPPORTED) begin: zbc
-    zbc #(WIDTH) ZBC(.A(ABMU), .RevA, .B(BBMU), .Funct3, .ZBCResult);
+    openhw_zbc #(WIDTH) ZBC(.A(ABMU), .RevA, .B(BBMU), .Funct3, .ZBCResult);
   end else assign ZBCResult = 0;
 
   // ZBB Unit
   if (P.ZBB_SUPPORTED) begin: zbb
-    zbb #(WIDTH) ZBB(.A(ABMU), .RevA, .B(BBMU), .W64, .LT, .LTU, .BUnsigned(Funct3[0]), .ZBBSelect, .ZBBResult);
+    openhw_zbb #(WIDTH) ZBB(.A(ABMU), .RevA, .B(BBMU), .W64, .LT, .LTU, .BUnsigned(Funct3[0]), .ZBBSelect, .ZBBResult);
   end else assign ZBBResult = 0;
 
   // Result Select Mux
@@ -98,7 +98,7 @@ module bitmanipalu import cvw::*; #(parameter cvw_t P,
     case (BSelect)
       // 00: ALU, 01: ZBA/ZBS, 10: ZBB, 11: ZBC
       2'b00: ALUResult = PreALUResult; 
-      2'b01: ALUResult = FullResult;         // NOTE: We don't use ALUResult because ZBA/ZBS instructions don't sign extend the MSB of the right-hand word.
+      2'b01: ALUResult = FullResult;         // NOTE: We don't use ALUResult because ZBA/ZBS instructions don't sign openhw_extend the MSB of the right-hand word.
       2'b10: ALUResult = ZBBResult; 
       2'b11: ALUResult = ZBCResult;
     endcase

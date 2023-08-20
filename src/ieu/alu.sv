@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module alu import cvw::*; #(parameter cvw_t P, parameter WIDTH) (
+module openhw_alu import cvw::*; #(parameter cvw_t P, parameter WIDTH) (
   input  logic [WIDTH-1:0] A, B,        // Operands
   input  logic             W64,         // W64-type instruction
   input  logic             SubArith,    // Subtraction or arithmetic shift
@@ -55,9 +55,9 @@ module alu import cvw::*; #(parameter cvw_t P, parameter WIDTH) (
   assign {Carry, Sum} = CondShiftA + CondMaskInvB + {{(WIDTH-1){1'b0}}, SubArith};
   
   // Shifts (configurable for rotation)
-  shifter #(P) sh(.A, .Amt(B[P.LOG_XLEN-1:0]), .Right(Funct3[2]), .W64, .SubArith, .Y(Shift), .Rotate(BALUControl[2]));
+  openhw_shifter #(P) sh(.A, .Amt(B[P.LOG_XLEN-1:0]), .Right(Funct3[2]), .W64, .SubArith, .Y(Shift), .Rotate(BALUControl[2]));
 
-  // Condition code flags are based on subtraction output Sum = A-B.
+  // Condition code openhw_flags are based on subtraction output Sum = A-B.
   // Overflow occurs when the numbers being subtracted have the opposite sign 
   // and the result has the opposite sign of A.
   // LT is simplified from Overflow = Asign & Bsign & Asign & Neg; LT = Neg ^ Overflow
@@ -87,7 +87,7 @@ module alu import cvw::*; #(parameter cvw_t P, parameter WIDTH) (
 
   // Final Result B instruction select mux
   if (P.ZBC_SUPPORTED | P.ZBS_SUPPORTED | P.ZBA_SUPPORTED | P.ZBB_SUPPORTED) begin : bitmanipalu
-    bitmanipalu #(P, WIDTH) balu(.A, .B, .W64, .BSelect, .ZBBSelect, .BMUActiveE,
+    openhw_bitmanipalu #(P, WIDTH) balu(.A, .B, .W64, .BSelect, .ZBBSelect, .BMUActiveE,
       .Funct3, .LT,.LTU, .BALUControl, .PreALUResult, .FullResult,
       .CondMaskB, .CondShiftA, .ALUResult);
   end else begin

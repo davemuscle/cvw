@@ -27,23 +27,23 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module privdec import cvw::*;  #(parameter cvw_t P) (
+module openhw_privdec import cvw::*;  #(parameter cvw_t P) (
   input  logic         clk, reset,
   input  logic         StallM,
-  input  logic [31:15] InstrM,                              // privileged instruction function field
-  input  logic         PrivilegedM,                         // is this a privileged instruction (from IEU controller)
+  input  logic [31:15] InstrM,                              // openhw_privileged instruction function field
+  input  logic         PrivilegedM,                         // is this a openhw_privileged instruction (from IEU controller)
   input  logic         IllegalIEUFPUInstrM,                 // Not a legal IEU instruction
   input  logic         IllegalCSRAccessM,                   // Not a legal CSR access
   input  logic [1:0]   PrivilegeModeW,                      // current privilege level
   input  logic         STATUS_TSR, STATUS_TVM, STATUS_TW,   // status bits
   output logic         IllegalInstrFaultM,                  // Illegal instruction
-  output logic         EcallFaultM, BreakpointFaultM,       // Ecall or breakpoint; must retire, so don't flush it when the trap occurs
+  output logic         EcallFaultM, BreakpointFaultM,       // Ecall or breakpoint; must retire, so don't flush it when the openhw_trap occurs
   output logic         sretM, mretM,                        // return instructions
   output logic         wfiM, sfencevmaM                     // wfi / sfence.vma / sinval.vma instructions
 );
 
   logic                rs1zeroM;                            // rs1 field = 0
-  logic                IllegalPrivilegedInstrM;             // privileged instruction isn't a legal one or in legal mode
+  logic                IllegalPrivilegedInstrM;             // openhw_privileged instruction isn't a legal one or in legal mode
   logic                WFITimeoutM;                         // WFI reaches timeout threshold
   logic                ebreakM, ecallM;                     // ebreak / ecall instructions
   logic                sinvalvmaM;                          // sinval.vma
@@ -51,7 +51,7 @@ module privdec import cvw::*;  #(parameter cvw_t P) (
   logic                invalM;                              // any of the svinval instructions
 
   ///////////////////////////////////////////
-  // Decode privileged instructions
+  // Decode openhw_privileged instructions
   ///////////////////////////////////////////
 
   assign rs1zeroM =    InstrM[19:15] == 5'b0;
@@ -79,9 +79,9 @@ module privdec import cvw::*;  #(parameter cvw_t P) (
   if (P.U_SUPPORTED) begin:wfi
     logic [P.WFI_TIMEOUT_BIT:0] WFICount, WFICountPlus1;
     assign WFICountPlus1 = WFICount + 1;
-    floprc #(P.WFI_TIMEOUT_BIT+1) wficountreg(clk, reset, ~wfiM, WFICountPlus1, WFICount);  // count while in WFI
+    openhw_floprc #(P.WFI_TIMEOUT_BIT+1) wficountreg(clk, reset, ~wfiM, WFICountPlus1, WFICount);  // count while in WFI
   // coverage off -item e 1 -fecexprrow 1
-  // WFI Timout trap will not occur when STATUS_TW is low while in supervisor mode, so the system gets stuck waiting for an interrupt and triggers a watchdog timeout.
+  // WFI Timout openhw_trap will not occur when STATUS_TW is low while in supervisor mode, so the system gets stuck waiting for an interrupt and triggers a watchdog timeout.
     assign WFITimeoutM = ((STATUS_TW & PrivilegeModeW != P.M_MODE) | (P.S_SUPPORTED & PrivilegeModeW == P.U_MODE)) & WFICount[P.WFI_TIMEOUT_BIT]; 
   // coverage on
   end else assign WFITimeoutM = 0;

@@ -24,7 +24,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module aplusbeq0 #(parameter WIDTH = 8) (
+module openhw_aplusbeq0 #(parameter WIDTH = 8) (
   input  logic [WIDTH-1:0] a, b,
   output logic             zero
 );

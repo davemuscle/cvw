@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module arrs (
+module openhw_arrs (
   input  logic  clk,
   input  logic  areset,
   output logic  reset

@@ -30,7 +30,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module pmpadrdec import cvw::*;  #(parameter cvw_t P) (
+module openhw_pmpadrdec import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.PA_BITS-1:0]  PhysicalAddress,
   input  logic [7:0]            PMPCfg,
   input  logic [P.PA_BITS-3:0]  PMPAdr,
@@ -84,6 +84,6 @@ module pmpadrdec import cvw::*;  #(parameter cvw_t P) (
   assign R = PMPCfg[0];
 
   // known bug: The size of the access is not yet checked.  For example, if an NA4 entry matches 0xC-0xF and the system
-  // attempts an 8-byte access to 0x8, the access should fail (see page 60 of privileged specification 20211203). This
+  // attempts an 8-byte access to 0x8, the access should fail (see page 60 of openhw_privileged specification 20211203). This
   // implementation will not detect the failure.
  endmodule

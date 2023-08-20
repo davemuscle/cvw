@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module btb import cvw::*;  #(parameter cvw_t P, 
+module openhw_btb import cvw::*;  #(parameter cvw_t P, 
                              parameter Depth = 10 ) (
   input  logic             clk,
   input  logic             reset,
@@ -92,22 +92,22 @@ module btb import cvw::*;  #(parameter cvw_t P,
 
 
   // An optimization may be using a PC relative address.
-  ram2p1r1wbe #(P, 2**Depth, P.XLEN+4) memory(
+  openhw_ram2p1r1wbe #(P, 2**Depth, P.XLEN+4) memory(
     .clk, .ce1(~StallF | reset), .ra1(PCNextFIndex), .rd1(TableBTBPredF),
      .ce2(~StallW & ~FlushW), .wa2(PCMIndex), .wd2({InstrClassM, IEUAdrM}), .we2(BTBWrongM), .bwe2('1));
 
-  flopenrc #(P.XLEN) BTBD(clk, reset, FlushD, ~StallD, BPBTAF, BPBTAD);
+  openhw_flopenrc #(P.XLEN) BTBD(clk, reset, FlushD, ~StallD, BPBTAF, BPBTAD);
 
   // BPBTAE is not strickly necessary.  However it is used by two parts of wally.
   // 1. It gates updates to the BTB when the prediction does not change.  This save power.
   // 2. BPBTAWrongE is used by the performance counters to track when the BTB's BPBTA or instruction class is wrong.
-  flopenrc #(P.XLEN) BTBTargetEReg(clk, reset, FlushE, ~StallE, BPBTAD, BPBTAE);
+  openhw_flopenrc #(P.XLEN) BTBTargetEReg(clk, reset, FlushE, ~StallE, BPBTAD, BPBTAE);
   assign BPBTAWrongE = (BPBTAE != IEUAdrE) & (InstrClassE[0] | InstrClassE[1] & ~InstrClassE[2]);
 
-  flopenrc #(1) BPBTAWrongMReg(clk, reset, FlushM, ~StallM, BPBTAWrongE, BPBTAWrongM);  
+  openhw_flopenrc #(1) BPBTAWrongMReg(clk, reset, FlushM, ~StallM, BPBTAWrongE, BPBTAWrongM);  
   assign BTBWrongM = BPBTAWrongM | IClassWrongM;
   
-  flopenr #(P.XLEN) PCWReg(clk, reset, ~StallW, PCM, PCW);
-  flopenr #(P.XLEN) IEUAdrWReg(clk, reset, ~StallW, IEUAdrM, IEUAdrW);
+  openhw_flopenr #(P.XLEN) PCWReg(clk, reset, ~StallW, PCM, PCW);
+  openhw_flopenr #(P.XLEN) IEUAdrWReg(clk, reset, ~StallW, IEUAdrM, IEUAdrW);
 
 endmodule

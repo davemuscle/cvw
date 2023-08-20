@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module bmuctrl import cvw::*;  #(parameter cvw_t P) (
+module openhw_bmuctrl import cvw::*;  #(parameter cvw_t P) (
   input  logic        clk, reset,
   // Decode stage control signals
   input  logic        StallD, FlushD,          // Stall, flush Decode stage
@@ -95,7 +95,7 @@ module bmuctrl import cvw::*;  #(parameter cvw_t P) (
         17'b0110011_0110000_001: BMUControlsD = `BMUCTRLW'b001_01_111_1_0_0_1_0_1_0_0_0;  // rol
         17'b0110011_0110000_101: BMUControlsD = `BMUCTRLW'b001_01_111_1_0_0_1_0_1_0_0_0;  // ror
         17'b0010011_0110000_001: if ((Rs2D[4:1] == 4'b0010))
-                                  BMUControlsD = `BMUCTRLW'b000_10_001_1_1_0_1_0_0_0_0_0;  // sign extend instruction
+                                  BMUControlsD = `BMUCTRLW'b000_10_001_1_1_0_1_0_0_0_0_0;  // sign openhw_extend instruction
                                 else if ((Rs2D[4:2]==3'b000) & ~(Rs2D[1] & Rs2D[0]))
                                   BMUControlsD = `BMUCTRLW'b000_10_000_1_1_0_1_0_0_0_0_0;  // count instruction
 //        // coverage off: This case can't occur in RV64
@@ -156,7 +156,7 @@ module bmuctrl import cvw::*;  #(parameter cvw_t P) (
           17'b0010011_001010?_001: BMUControlsD = `BMUCTRLW'b110_01_000_1_1_0_1_0_0_1_0_0;  // bseti (rv64)
         endcase
     end
-    if (P.ZBB_SUPPORTED | P.ZBS_SUPPORTED) // rv32i/64i shift instructions need BMU ALUSelect when BMU shifter is used
+    if (P.ZBB_SUPPORTED | P.ZBS_SUPPORTED) // rv32i/64i shift instructions need BMU ALUSelect when BMU openhw_shifter is used
       casez({OpD, Funct7D, Funct3D})
         17'b0110011_0?0000?_?01: BMUControlsD = `BMUCTRLW'b001_00_000_1_0_0_1_0_0_0_0_0;  // sra, srl, sll
         17'b0010011_0?0000?_?01: BMUControlsD = `BMUCTRLW'b001_00_000_1_1_0_1_0_0_0_0_0;  // srai, srli, slli
@@ -175,5 +175,5 @@ module bmuctrl import cvw::*;  #(parameter cvw_t P) (
   assign ALUSelectD = BALUOpD ? BALUSelectD : (ALUOpD ? Funct3D : 3'b000);
 
   // BMU Execute stage pipieline control register
-  flopenrc #(10) controlregBMU(clk, reset, FlushE, ~StallE, {BSelectD, ZBBSelectD, BRegWriteD, BALUControlD, ~IllegalBitmanipInstrD}, {BSelectE, ZBBSelectE, BRegWriteE, BALUControlE, BMUActiveE});
+  openhw_flopenrc #(10) controlregBMU(clk, reset, FlushE, ~StallE, {BSelectD, ZBBSelectD, BRegWriteD, BALUControlD, ~IllegalBitmanipInstrD}, {BSelectE, ZBBSelectE, BRegWriteE, BALUControlE, BMUActiveE});
 endmodule

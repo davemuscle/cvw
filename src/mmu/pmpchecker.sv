@@ -29,7 +29,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module pmpchecker import cvw::*;  #(parameter cvw_t P) (
+module openhw_pmpchecker import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.PA_BITS-1:0]     PhysicalAddress,  
   input  logic [1:0]               PrivilegeModeW,
   // ModelSim has a switch -svinputport which controls whether input ports
@@ -55,7 +55,7 @@ module pmpchecker import cvw::*;  #(parameter cvw_t P) (
   logic [P.PMP_ENTRIES-1:0]        PAgePMPAdr; // for TOR PMP matching, PhysicalAddress > PMPAdr[i]
 
   if (P.PMP_ENTRIES > 0) begin: pmp // prevent complaints about array of no elements when PMP_ENTRIES = 0
-    pmpadrdec #(P) pmpadrdecs[P.PMP_ENTRIES-1:0](
+    openhw_pmpadrdec #(P) pmpadrdecs[P.PMP_ENTRIES-1:0](
       .PhysicalAddress, 
       .PMPCfg(PMPCFG_ARRAY_REGW),
       .PMPAdr(PMPADDR_ARRAY_REGW),
@@ -64,7 +64,7 @@ module pmpchecker import cvw::*;  #(parameter cvw_t P) (
       .Match, .L, .X, .W, .R);
   end
 
-  priorityonehot #(P.PMP_ENTRIES) pmppriority(.a(Match), .y(FirstMatch)); // combine the match signal from all the adress decoders to find the first one that matches.
+  openhw_priorityonehot #(P.PMP_ENTRIES) pmppriority(.a(Match), .y(FirstMatch)); // combine the match signal from all the adress decoders to find the first one that matches.
 
   // Only enforce PMP checking for S and U modes or in Machine mode when L bit is set in selected region
   assign EnforcePMP = (PrivilegeModeW != P.M_MODE) | (|(L & FirstMatch)); // *** switch to this logic when PMP is initialized for non-machine mode

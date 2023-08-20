@@ -27,7 +27,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module forward (
+module openhw_forward (
   // Detect hazards
   input  logic [4:0]  Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW, // Source and destination registers
   input  logic        MemReadE, MDUE, CSRReadE,              // Execute stage instruction is a load (MemReadE), divide (MDUE), or CSR read (CSRReadE)

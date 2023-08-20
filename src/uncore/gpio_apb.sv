@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module gpio_apb import cvw::*;  #(parameter cvw_t P) (
+module openhw_gpio_apb import cvw::*;  #(parameter cvw_t P) (
   input  logic                PCLK, PRESETn,
   input  logic                PSEL,
   input  logic [7:0]          PADDR, 
@@ -114,7 +114,7 @@ module gpio_apb import cvw::*;  #(parameter cvw_t P) (
       if (memwrite & (entry == 8'h34)) low_ip  <= low_ip  & ~Din;
       else                             low_ip  <= low_ip  | ~input3d;
 
-      case(entry) // flop to sample inputs
+      case(entry) // openhw_flop to sample inputs
         8'h00: Dout   <= input_val;
         8'h04: Dout   <= input_en;
         8'h08: Dout   <= output_en;
@@ -140,9 +140,9 @@ module gpio_apb import cvw::*;  #(parameter cvw_t P) (
   else                      assign input0d = GPIOIN & input_en;
 
   // synchroninzer for inputs
-  flop #(32) sync1(PCLK,input0d,input1d);
-  flop #(32) sync2(PCLK,input1d,input2d);
-  flop #(32) sync3(PCLK,input2d,input3d);
+  openhw_flop #(32) sync1(PCLK,input0d,input1d);
+  openhw_flop #(32) sync2(PCLK,input1d,input2d);
+  openhw_flop #(32) sync3(PCLK,input2d,input3d);
   assign input_val = input3d;
   assign iof_out   = iof_sel & iof1 | ~iof_sel & iof0;        // per-bit mux between iof1 and iof0
   assign gpio_out  = iof_en & iof_out | ~iof_en & output_val; // per-bit mux between IOF and output_val

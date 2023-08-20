@@ -26,14 +26,14 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module round import cvw::*;  #(parameter cvw_t P) (
+module openhw_round import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.FMTBITS-1:0]     OutFmt,             // output format
   input  logic [2:0]               Frm,                // rounding mode
   input  logic [1:0]               PostProcSel,        // select the postprocessor output
   input  logic                     Ms,                 // normalized sign
   input  logic [P.CORRSHIFTSZ-1:0] Mf,                 // normalized fraction
   // fma
-  input  logic                     FmaOp,              // is an fma opperation being done?
+  input  logic                     FmaOp,              // is an openhw_fma opperation being done?
   input  logic [P.NE+1:0]          FmaMe,              // exponent of the normalized sum for fma
   input  logic                     FmaASticky,         // addend's sticky bit
   // divsqrt
@@ -82,7 +82,7 @@ module round import cvw::*;  #(parameter cvw_t P) (
   // Rounding
   ///////////////////////////////////////////////////////////////////////////////
 
-  // round to nearest even
+  // openhw_round to nearest even
   //      {Round, Sticky}
   //      0x - do nothing
   //      10 - tie - Plus1 if result is odd  (LSBNormSum = 1)
@@ -90,17 +90,17 @@ module round import cvw::*;  #(parameter cvw_t P) (
   //      11 - do nothing if a small number was supposed to subtracted (the sticky bit was set by the small number)
   //         - plus 1 otherwise
 
-  //  round to zero - subtract 1 if a small number was supposed to be subtracted from a positive result with guard and round bits of 0
+  //  openhw_round to zero - subtract 1 if a small number was supposed to be subtracted from a positive result with guard and openhw_round bits of 0
 
-  //  round to -infinity
-  //          - Plus1 if negative unless a small number was supposed to be subtracted from a result with guard and round bits of 0
-  //          - subtract 1 if a small number was supposed to be subtracted from a positive result with guard and round bits of 0
+  //  openhw_round to -infinity
+  //          - Plus1 if negative unless a small number was supposed to be subtracted from a result with guard and openhw_round bits of 0
+  //          - subtract 1 if a small number was supposed to be subtracted from a positive result with guard and openhw_round bits of 0
 
-  //  round to infinity
-  //          - Plus1 if positive unless a small number was supposed to be subtracted from a result with guard and round bits of 0
-  //          - subtract 1 if a small number was supposed to be subtracted from a negative result with guard and round bits of 0
+  //  openhw_round to infinity
+  //          - Plus1 if positive unless a small number was supposed to be subtracted from a result with guard and openhw_round bits of 0
+  //          - subtract 1 if a small number was supposed to be subtracted from a negative result with guard and openhw_round bits of 0
 
-  //  round to nearest max magnitude
+  //  openhw_round to nearest max magnitude
   //      {Guard, Round, Sticky}
   //      0x - do nothing
   //      10 - tie - Plus1
@@ -179,11 +179,11 @@ module round import cvw::*;  #(parameter cvw_t P) (
   end
 
   // only add the Addend sticky if doing an FMA opperation
-  //      - the shifter shifts too far left when there's an underflow (shifting out all possible sticky bits)
+  //      - the openhw_shifter shifts too far left when there's an underflow (shifting out all possible sticky bits)
   assign Sticky = FmaASticky&FmaOp | NormSticky | CvtResUf&CvtOp | FmaMe[P.NE+1]&FmaOp | DivSticky&DivOp;
   
-  // determine round and LSB of the rounded value
-  //      - underflow round bit is used to determint the underflow flag
+  // determine openhw_round and LSB of the rounded value
+  //      - underflow openhw_round bit is used to determint the underflow flag
   if (P.FPSIZES == 1) begin
       assign FpGuard  = Mf[P.CORRSHIFTSZ-P.NF-1];
       assign FpLsbRes = Mf[P.CORRSHIFTSZ-P.NF];
@@ -307,7 +307,7 @@ module round import cvw::*;  #(parameter cvw_t P) (
 
 
 
-  // round the result
+  // openhw_round the result
   //      - if the fraction overflows one should be added to the exponent
   assign {FullRe, Rf} = {Me, RoundFrac} + RoundAdd;
   assign Re           = FullRe[P.NE-1:0];

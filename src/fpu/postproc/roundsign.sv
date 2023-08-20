@@ -26,13 +26,13 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module roundsign (
+module openhw_roundsign (
   input logic         Xs,     // x sign
   input logic         Ys,     // y sign
   input logic         CvtCs,  // convert result sign
-  input logic         FmaSs,  // fma sum sign
+  input logic         FmaSs,  // openhw_fma sum sign
   input logic         Sqrt,   // sqrt oppertion? (when using divsqrt unit)
-  input logic         FmaOp,  // is fma opperation
+  input logic         FmaOp,  // is openhw_fma opperation
   input logic         DivOp,  // is divsqrt opperation
   input logic         CvtOp,  // is cvt opperation
   output logic        Ms      // normalized result sign

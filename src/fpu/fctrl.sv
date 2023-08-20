@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fctrl import cvw::*;  #(parameter cvw_t P) (
+module openhw_fctrl import cvw::*;  #(parameter cvw_t P) (
   input  logic                 clk,
   input  logic                 reset,
   // input control signals
@@ -60,7 +60,7 @@ module fctrl import cvw::*;  #(parameter cvw_t P) (
   output logic [4:0]           Adr1D, Adr2D, Adr3D,                // adresses of each input
   output logic [4:0]           Adr1E, Adr2E, Adr3E,                // adresses of each input
   // other control signals
-  output logic                 IllegalFPUInstrD,                   // Is the instruction an illegal fpu instruction
+  output logic                 IllegalFPUInstrD,                   // Is the instruction an illegal openhw_fpu instruction
   output logic                 FDivStartE, IDivStartE              // Start division or squareroot
   );
 
@@ -82,7 +82,7 @@ module fctrl import cvw::*;  #(parameter cvw_t P) (
 
   // FPU Instruction Decoder
   assign Fmt = Funct7D[1:0];
-  assign Fmt2 = Rs2D[1:0]; // source format for fcvt fp->fp
+  assign Fmt2 = Rs2D[1:0]; // source format for openhw_fcvt fp->fp
 
   assign SupportedFmt = (Fmt == 2'b00 | (Fmt == 2'b01 & P.D_SUPPORTED) |
                          (Fmt == 2'b10 & P.ZFH_SUPPORTED) | (Fmt == 2'b11 & P.Q_SUPPORTED));
@@ -213,11 +213,11 @@ module fctrl import cvw::*;  #(parameter cvw_t P) (
   assign {FRegWriteD, FWriteIntD, FResSelD, PostProcSelD, OpCtrlD, FDivStartD, IllegalFPUInstrD, FCvtIntD} = ControlsD;
   
   // rounding modes:
-  //    000 - round to nearest, ties to even
-  //    001 - round twords 0 - round to min magnitude
-  //    010 - round down - round twords negitive infinity
-  //    011 - round up - round twords positive infinity
-  //    100 - round to nearest, ties to max magnitude - round to nearest, ties away from zero
+  //    000 - openhw_round to nearest, ties to even
+  //    001 - openhw_round twords 0 - openhw_round to min magnitude
+  //    010 - openhw_round down - openhw_round twords negitive infinity
+  //    011 - openhw_round up - openhw_round twords positive infinity
+  //    100 - openhw_round to nearest, ties to max magnitude - openhw_round to nearest, ties away from zero
   //    111 - dynamic - choose FRM_REGW as rounding mode
   assign FrmD = &Funct3D ? FRM_REGW : Funct3D;
 
@@ -250,7 +250,7 @@ module fctrl import cvw::*;  #(parameter cvw_t P) (
                   ((FResSelD==2'b11)&(PostProcSelD==2'b00))|                                       // mv float to int 
                   ((FResSelD==2'b01)&((PostProcSelD==2'b00)|((PostProcSelD==2'b01)&OpCtrlD[0])))); // cvt both or sqrt
 
-  //    Z - fma ops only
+  //    Z - openhw_fma ops only
   assign ZEnD = (PostProcSelD==2'b10)&(~OpCtrlD[2]|OpCtrlD[1]);                                    // fma, add, sub   
 
   //  Final Res Sel:
@@ -309,19 +309,19 @@ module fctrl import cvw::*;  #(parameter cvw_t P) (
   assign Adr3D = InstrD[31:27];
  
   // D/E pipleine register
-  flopenrc #(14+P.FMTBITS) DECtrlReg3(clk, reset, FlushE, ~StallE, 
+  openhw_flopenrc #(14+P.FMTBITS) DECtrlReg3(clk, reset, FlushE, ~StallE, 
               {FRegWriteD, PostProcSelD, FResSelD, FrmD, FmtD, OpCtrlD, FWriteIntD, FCvtIntD, ~IllegalFPUInstrD},
               {FRegWriteE, PostProcSelE, FResSelE, FrmE, FmtE, OpCtrlE, FWriteIntE, FCvtIntE, FPUActiveE});
-  flopenrc #(15) DEAdrReg(clk, reset, FlushE, ~StallE, {Adr1D, Adr2D, Adr3D}, {Adr1E, Adr2E, Adr3E});
-  flopenrc #(1) DEFDivStartReg(clk, reset, FlushE, ~StallE|FDivBusyE, FDivStartD, FDivStartE);
-  flopenrc #(3) DEEnReg(clk, reset, FlushE, ~StallE, {XEnD, YEnD, ZEnD}, {XEnE, YEnE, ZEnE});
+  openhw_flopenrc #(15) DEAdrReg(clk, reset, FlushE, ~StallE, {Adr1D, Adr2D, Adr3D}, {Adr1E, Adr2E, Adr3E});
+  openhw_flopenrc #(1) DEFDivStartReg(clk, reset, FlushE, ~StallE|FDivBusyE, FDivStartD, FDivStartE);
+  openhw_flopenrc #(3) DEEnReg(clk, reset, FlushE, ~StallE, {XEnD, YEnD, ZEnD}, {XEnE, YEnE, ZEnE});
 
   // Integer division on FPU divider
   if (P.M_SUPPORTED & P.IDIV_ON_FPU) assign IDivStartE = IntDivE;
   else                               assign IDivStartE = 0; 
 
   // E/M pipleine register
-  flopenrc #(13+int'(P.FMTBITS)) EMCtrlReg (clk, reset, FlushM, ~StallM,
+  openhw_flopenrc #(13+int'(P.FMTBITS)) EMCtrlReg (clk, reset, FlushM, ~StallM,
               {FRegWriteE, FResSelE, PostProcSelE, FrmE, FmtE, OpCtrlE, FWriteIntE, FCvtIntE},
               {FRegWriteM, FResSelM, PostProcSelM, FrmM, FmtM, OpCtrlM, FWriteIntM, FCvtIntM});
   
@@ -329,7 +329,7 @@ module fctrl import cvw::*;  #(parameter cvw_t P) (
   assign FpLoadStoreM = FResSelM[1];
 
   // M/W pipleine register
-  flopenrc #(4)  MWCtrlReg(clk, reset, FlushW, ~StallW,
+  openhw_flopenrc #(4)  MWCtrlReg(clk, reset, FlushW, ~StallW,
           {FRegWriteM, FResSelM, FCvtIntM},
           {FRegWriteW, FResSelW, FCvtIntW});
  

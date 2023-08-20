@@ -28,7 +28,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module lrsc import cvw::*;  #(parameter cvw_t P) (
+module openhw_lrsc import cvw::*;  #(parameter cvw_t P) (
   input  logic                 clk, 
   input  logic                 reset,
   input  logic                 StallW,
@@ -41,7 +41,7 @@ module lrsc import cvw::*;  #(parameter cvw_t P) (
 );
 
   // possible bug: *** double check if PreLSURWM needs to be flushed by ignorerequest.
-  // Handle atomic load reserved / store conditional
+  // Handle openhw_atomic load reserved / store conditional
   logic [P.PA_BITS-1:2]        ReservationPAdrW;
   logic                        ReservationValidM, ReservationValidW; 
   logic                        lrM, scM, WriteAdrMatchM;
@@ -59,7 +59,7 @@ module lrsc import cvw::*;  #(parameter cvw_t P) (
     else ReservationValidM = ReservationValidW; // otherwise don't change valid
   end
   
-  flopenr #(P.PA_BITS-2) resadrreg(clk, reset, lrM & ~StallW, PAdrM[P.PA_BITS-1:2], ReservationPAdrW); // could drop clear on this one but not valid
-  flopenr #(1) resvldreg(clk, reset, ~StallW, ReservationValidM, ReservationValidW);
-  flopenr #(1) squashreg(clk, reset, ~StallW, SquashSCM, SquashSCW);
+  openhw_flopenr #(P.PA_BITS-2) resadrreg(clk, reset, lrM & ~StallW, PAdrM[P.PA_BITS-1:2], ReservationPAdrW); // could drop clear on this one but not valid
+  openhw_flopenr #(1) resvldreg(clk, reset, ~StallW, ReservationValidM, ReservationValidW);
+  openhw_flopenr #(1) squashreg(clk, reset, ~StallW, SquashSCM, SquashSCW);
 endmodule

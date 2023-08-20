@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fcvt import cvw::*;  #(parameter cvw_t P) (
+module openhw_fcvt import cvw::*;  #(parameter cvw_t P) (
   input  logic                    Xs,           // input's sign
   input  logic [P.NE-1:0]         Xe,           // input's exponent
   input  logic [P.NF:0]           Xm,           // input's fraction
@@ -88,19 +88,19 @@ module fcvt import cvw::*;  #(parameter cvw_t P) (
   assign IntZero = ~|TrimInt;
 
   ///////////////////////////////////////////////////////////////////////////
-  // lzc 
+  // openhw_lzc 
   ///////////////////////////////////////////////////////////////////////////
   
-  // choose the input to the leading zero counter i.e. priority encoder
+  // choose the input to the leading zero openhw_counter i.e. priority encoder
   //             int -> fp : | positive integer | 00000... (if needed) | 
   //             fp  -> fp : | fraction         | 00000... (if needed) | 
   assign LzcInFull = IntToFp ? {TrimInt, {P.CVTLEN-P.XLEN+1{1'b0}}} :
                                {Xm, {P.CVTLEN-P.NF{1'b0}}};
 
-  // used as shifter input in postprocessor
+  // used as openhw_shifter input in postprocessor
   assign LzcIn = LzcInFull[P.CVTLEN-1:0];
   
-  lzc #(P.CVTLEN+1) lzc (.num(LzcInFull), .ZeroCnt(LeadingZeros));
+  openhw_lzc #(P.CVTLEN+1) openhw_lzc (.num(LzcInFull), .ZeroCnt(LeadingZeros));
   
   ///////////////////////////////////////////////////////////////////////////
   // exp calculations
@@ -200,7 +200,7 @@ module fcvt import cvw::*;  #(parameter cvw_t P) (
   //      ??? -> fp: 
   //          - shift left by LeadingZeros - to shift till the result is normalized
   //              - only shift fp -> fp if the intital value is subnormal
-  //                  - this is a problem because the input to the lzc was the fraction rather than the mantissa
+  //                  - this is a problem because the input to the openhw_lzc was the fraction rather than the mantissa
   //                  - rather have a few and-gates than an extra bit in the priority encoder??? *** is this true?
   always_comb
       if(ToInt)                       ShiftAmt = Ce[P.LOGCVTLEN-1:0]&{P.LOGCVTLEN{~Ce[P.NE]}};

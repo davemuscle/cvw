@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module flags import cvw::*;  #(parameter cvw_t P) (
+module openhw_flags import cvw::*;  #(parameter cvw_t P) (
   input  logic                 Xs,                     // X sign
   input  logic [P.FMTBITS-1:0] OutFmt,                 // output format
   input  logic                 InfIn,                  // is a Inf input being used
@@ -171,7 +171,7 @@ module flags import cvw::*;  #(parameter cvw_t P) (
   //                  if the input is NaN or infinity
   //                  |           if the integer res overflows (out of range) 
   //                  |           |                                  if the input was negitive but ouputing to a unsigned number
-  //                  |           |                                  |                    the res doesn't round to zero
+  //                  |           |                                  |                    the res doesn't openhw_round to zero
   //                  |           |                                  |                    |               or the res rounds up out of bounds
   //                  |           |                                  |                    |                       and the res didn't underflow
   //                  |           |                                  |                    |                       |

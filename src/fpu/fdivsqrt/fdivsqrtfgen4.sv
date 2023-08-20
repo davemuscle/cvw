@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fdivsqrtfgen4 import cvw::*;  #(parameter cvw_t P) (
+module openhw_fdivsqrtfgen4 import cvw::*;  #(parameter cvw_t P) (
   input  logic [3:0]        udigit,
   input  logic [P.DIVb+3:0] C, U, UM,
   output logic [P.DIVb+3:0] F
@@ -40,7 +40,7 @@ module fdivsqrtfgen4 import cvw::*;  #(parameter cvw_t P) (
   assign FN1 = (UM << 1) | (C & ~(C << 3));
   assign FN2 = (UM << 2) | ((C << 2) & ~(C << 4));
 
-  // Choose which adder input will be used
+  // Choose which openhw_adder input will be used
   always_comb
     if (udigit[3])       F = F2;
     else if (udigit[2])  F = F1;

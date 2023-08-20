@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module fdivsqrtqsel2 ( 
+module openhw_fdivsqrtqsel2 ( 
   input  logic [3:0] ps, pc, 
   output logic       up, uz, un
 );
