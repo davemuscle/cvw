@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module roundsign(
+module roundsign (
   input logic         Xs,     // x sign
   input logic         Ys,     // y sign
   input logic         CvtCs,  // convert result sign

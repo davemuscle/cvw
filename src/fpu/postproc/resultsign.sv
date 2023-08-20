@@ -26,7 +26,7 @@
 // and limitations under the License.
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-module resultsign(
+module resultsign (
   input  logic [2:0]  Frm,        // rounding mode
   input  logic        FmaOp,      // is the operation an Fma
   input  logic        Mult,       // is the fma opperation multipy
